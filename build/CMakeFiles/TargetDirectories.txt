@@ -1,4 +1,0 @@
-/home/ayush/Downloads/stag-master/build/CMakeFiles/LibStag.dir
-/home/ayush/Downloads/stag-master/build/CMakeFiles/testrun.dir
-/home/ayush/Downloads/stag-master/build/CMakeFiles/edit_cache.dir
-/home/ayush/Downloads/stag-master/build/CMakeFiles/rebuild_cache.dir
