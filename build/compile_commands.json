@@ -1,0 +1,107 @@
+[
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/Decoder.o -c /home/ayush/Downloads/stag-master/src/Decoder.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/Decoder.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/Drawer.o -c /home/ayush/Downloads/stag-master/src/Drawer.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/Drawer.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/EDInterface.o -c /home/ayush/Downloads/stag-master/src/EDInterface.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/EDInterface.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/Ellipse.o -c /home/ayush/Downloads/stag-master/src/Ellipse.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/Ellipse.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/Marker.o -c /home/ayush/Downloads/stag-master/src/Marker.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/Marker.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/PoseRefiner.o -c /home/ayush/Downloads/stag-master/src/PoseRefiner.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/PoseRefiner.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/Quad.o -c /home/ayush/Downloads/stag-master/src/Quad.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/Quad.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/QuadDetector.o -c /home/ayush/Downloads/stag-master/src/QuadDetector.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/QuadDetector.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/Stag.o -c /home/ayush/Downloads/stag-master/src/Stag.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/Stag.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/utility.o -c /home/ayush/Downloads/stag-master/src/utility.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/utility.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/ED/ED.o -c /home/ayush/Downloads/stag-master/src/ED/ED.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/ED/ED.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/ED/EDInternals.o -c /home/ayush/Downloads/stag-master/src/ED/EDInternals.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/ED/EDInternals.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/ED/EDLines.o -c /home/ayush/Downloads/stag-master/src/ED/EDLines.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/ED/EDLines.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/ED/GradientOperators.o -c /home/ayush/Downloads/stag-master/src/ED/GradientOperators.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/ED/GradientOperators.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/ED/ImageSmooth.o -c /home/ayush/Downloads/stag-master/src/ED/ImageSmooth.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/ED/ImageSmooth.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/ED/LineSegment.o -c /home/ayush/Downloads/stag-master/src/ED/LineSegment.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/ED/LineSegment.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/ED/MyMath.o -c /home/ayush/Downloads/stag-master/src/ED/MyMath.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/ED/MyMath.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/ED/NFA.o -c /home/ayush/Downloads/stag-master/src/ED/NFA.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/ED/NFA.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/ED/Utilities.o -c /home/ayush/Downloads/stag-master/src/ED/Utilities.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/ED/Utilities.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11 -DLibStag_EXPORTS -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -fPIC -o CMakeFiles/LibStag.dir/src/ED/ValidateEdgeSegments.o -c /home/ayush/Downloads/stag-master/src/ED/ValidateEdgeSegments.cpp",
+  "file": "/home/ayush/Downloads/stag-master/src/ED/ValidateEdgeSegments.cpp"
+},
+{
+  "directory": "/home/ayush/Downloads/stag-master/build",
+  "command": "/bin/x86_64-linux-gnu-g++-11  -I/home/ayush/Downloads/stag-master/src -I/home/ayush/Downloads/stag-master/src/ED -isystem /usr/local/include/opencv4  -Wall -w  -std=c++11 -g -o CMakeFiles/testrun.dir/main.o -c /home/ayush/Downloads/stag-master/main.cpp",
+  "file": "/home/ayush/Downloads/stag-master/main.cpp"
+}
+]

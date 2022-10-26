@@ -1,0 +1,7 @@
+*.a
+*.so
+*.o
+*.swp
+build/
+app/
+.vscode/
