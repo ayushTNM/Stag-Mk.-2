@@ -5,3 +5,5 @@
 build/
 app/
 .vscode/
+ref/marker generator/bin/
+ref/marker generator/obj/

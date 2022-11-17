@@ -26,10 +26,13 @@ namespace EDMarker_Generator
         
         // radius of the circle border 
         float outerCircleRadius = 0.4f;
-        // radius of the circle that encloses code bits
-        float innerCircleRadius = 0.35f;
-        // radius of the code circles (in ratio to innerCircleRadius)
+
+        // innerSquare size
+        float innerSquare = 0.8f;
+
+        // radius of the code circles (in ratio to circle inside innerSquare)
         float codeRadius = 0.062482177287080f;
+
         // radius of the filler code circles (in ratio to codeRadius)
         float fillerCodeRadius = 0.7f;
 
@@ -40,16 +43,19 @@ namespace EDMarker_Generator
         float markerSize;
         float borderSize;
 
-        float outerCircleDiameterSize;
+        float innerSquareSize;
         float innerCircleDiameterSize;
-        float outerCircleTopLeft;
         float innerCircleTopLeft;
         float codeCircleDiameterSize;
         float fillerCircleDiameterSize;
+        float innerSquareTopLeft;
+        float innerSquareBottomRight;
+        float innerSquareLen;
+        List<PointF> innerSquarePoints;
 
 
         // code related stuff
-        
+
         int HD;
         List<List<Byte>> codes;
         List<doublePoint> codeLocs;
@@ -68,9 +74,21 @@ namespace EDMarker_Generator
             markerSize = fileSize / (1 + border * 2);
             borderSize = markerSize * border;
 
-            outerCircleDiameterSize = 2 * markerSize * outerCircleRadius;
-            innerCircleDiameterSize = 2 * markerSize * innerCircleRadius;
-            outerCircleTopLeft = (fileSize - outerCircleDiameterSize) / 2;
+            
+            innerSquarePoints = new List<PointF>();
+
+
+            innerSquareSize = markerSize * innerSquare;
+            innerSquareTopLeft = borderSize + ((markerSize-innerSquareSize)/2);
+            innerSquareBottomRight = fileSize - innerSquareTopLeft;
+            innerSquarePoints.Add(new PointF(innerSquareTopLeft, innerSquareTopLeft + (innerSquareSize / 2)));
+            innerSquarePoints.Add(new PointF(innerSquareTopLeft + (innerSquareSize / 2), innerSquareTopLeft));
+            innerSquarePoints.Add(new PointF(innerSquareBottomRight, innerSquareBottomRight - (innerSquareSize / 2)));
+            innerSquarePoints.Add(new PointF(innerSquareBottomRight - (innerSquareSize / 2), innerSquareBottomRight));
+
+            innerSquareLen = (((float)Math.Sqrt(2) * innerSquareSize) / 2);
+
+            innerCircleDiameterSize = (float)0.95 * innerSquareLen;
             innerCircleTopLeft = (fileSize - innerCircleDiameterSize) / 2;
             codeCircleDiameterSize = 2 * innerCircleDiameterSize * codeRadius;
             fillerCircleDiameterSize = codeCircleDiameterSize * fillerCodeRadius;
@@ -150,7 +168,7 @@ namespace EDMarker_Generator
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
                 // draw the outer circle
-                g.FillEllipse(Brushes.White, outerCircleTopLeft, outerCircleTopLeft, outerCircleDiameterSize, outerCircleDiameterSize);
+                g.FillPolygon(Brushes.White, innerSquarePoints.ToArray());
 
                 // turn off antialiasing to apply morphological operations
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
@@ -172,6 +190,7 @@ namespace EDMarker_Generator
    
                 //erode, dilate
                 int rad = 12;
+                System.Diagnostics.Debug.WriteLine($"{dirName}, {i} busy.");
                 for (int j = 0; j < 5; j++)
                 {
                     dilateBitmap(ref img, 5, rad);
@@ -195,9 +214,16 @@ namespace EDMarker_Generator
                 Graphics gRing = Graphics.FromImage(ringImg);
                 gRing.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
                 gRing.FillRectangle(Brushes.Black, 0, 0, fileSize, fileSize);
-                gRing.FillEllipse(Brushes.White, outerCircleTopLeft, outerCircleTopLeft, outerCircleDiameterSize, outerCircleDiameterSize);
+                gRing.FillPolygon(Brushes.White, innerSquarePoints.ToArray());
+
                 gRing.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
                 gRing.FillEllipse(Brushes.Black, innerCircleTopLeft - 1, innerCircleTopLeft - 1, innerCircleDiameterSize + 2, innerCircleDiameterSize + 2);
+                List<PointF> innerSquarePointsExp = new List<PointF>();
+                innerSquarePointsExp.Add(PointF.Subtract(innerSquarePoints[0], new Size(0 , 1)));
+                innerSquarePointsExp.Add(PointF.Subtract(innerSquarePoints[1], new Size(1, 0)));
+                innerSquarePointsExp.Add(PointF.Add(innerSquarePoints[2], new Size(0, 2)));
+                innerSquarePointsExp.Add(PointF.Add(innerSquarePoints[3], new Size(2, 0)));
+
                 gRing.Dispose();
                 ringImg.MakeTransparent(Color.Black);
                 g.DrawImage(ringImg, 0, 0);
@@ -232,6 +258,7 @@ namespace EDMarker_Generator
                 while (idStr.Length < 5)
                     idStr = "0" + idStr;
                 img.Save(dirName + "/" + idStr + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                System.Diagnostics.Debug.WriteLine($"{dirName}, {i} done.");
             }
         }
 
@@ -266,7 +293,7 @@ namespace EDMarker_Generator
 
             List<Point> list = generateBallMask(radius);
 
-            int border = (int)outerCircleTopLeft;
+            int border = (int)innerSquareTopLeft;
 
             for (int j = border; j < fileSize - border; j++)
             {
@@ -303,7 +330,7 @@ namespace EDMarker_Generator
 
             List<Point> list = generateBallMask(radius);
 
-            int border = (int)outerCircleTopLeft;
+            int border = (int)innerSquareTopLeft;
 
             for (int j = border; j < fileSize - border; j++)
             {
@@ -318,7 +345,7 @@ namespace EDMarker_Generator
                             *((byte*)(imgData.Scan0 + k * imgData.Stride + j * 4)) = 0;
                             *((byte*)(imgData.Scan0 + k * imgData.Stride + j * 4) + 1) = 0;
                             *((byte*)(imgData.Scan0 + k * imgData.Stride + j * 4) + 2) = 0;
-                            *((byte*)(imgData.Scan0 + k * imgData.Stride + j * 4) + 3) = 0;
+                            *((byte*)(imgData.Scan0 + k * imgData.Stride + j * 4) + 3) = 255;
                         }
                     }
                 }
@@ -342,7 +369,7 @@ namespace EDMarker_Generator
             {
                 for (int j = 0; j < b.Height; j++)
                 {
-                    if (Math.Sqrt((i - b.Width / 2) * (i - b.Width / 2) + (j - b.Height / 2) * (j - b.Height / 2)) < b.Width / 2 - outerCircleTopLeft - 10)
+                    if (Math.Sqrt((i - b.Width / 2) * (i - b.Width / 2) + (j - b.Height / 2) * (j - b.Height / 2)) < b.Width / 2 - innerSquareTopLeft - 10)
                     {
                         if (isBlack(refData, i, j))
                         {
@@ -422,7 +449,7 @@ namespace EDMarker_Generator
         //BGRA
         public bool isWhite(BitmapData bd, int x, int y)
         {
-            byte* b = (byte*)bd.Scan0 + y * bd.Stride + x * 4;
+            byte *b = (byte*)bd.Scan0 + y * bd.Stride + x * 4;
 
             if ((*(b) != 255) || (*(b + 1) != 255) || (*(b + 2) != 255))
                 return false;
@@ -447,7 +474,7 @@ namespace EDMarker_Generator
         public void readCodeList()
         {
             codes = new List<List<byte>>();
-            StreamReader sr = new StreamReader("HD" + HD.ToString() + ".txt");
+            StreamReader sr = new StreamReader("../../HD" + HD.ToString() + ".txt");
 
             while(true)
             {
