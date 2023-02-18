@@ -20,8 +20,8 @@ class Stag
 	PoseRefiner poseRefiner;
 
 	vector<cv::Mat> codeLocs;
-	vector<cv::Mat> blackLocs;
-	vector<cv::Mat> whiteLocs;
+	vector<cv::Mat> innerLocs, blackLocs;
+	vector<cv::Mat> outerLocs, whiteLocs;
 
 	cv::Mat image;
 	vector<Marker> markers;

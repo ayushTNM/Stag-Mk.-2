@@ -5,7 +5,7 @@
 int main() {
   // cv::Mat image = cv::imread("1.png", cv::IMREAD_GRAYSCALE);
   cv::Mat image,image1;
-  cv::VideoCapture cap(0);//Declaring an object to capture stream of frames from default camera//
+  cv::VideoCapture cap(2);//Declaring an object to capture stream of frames from default camera//
    if (!cap.isOpened()){ //This section prompt an error message if no video stream is found//
       std::cout << "No video stream detected" << std::endl;
       system("pause");

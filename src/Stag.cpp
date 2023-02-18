@@ -24,9 +24,16 @@ void Stag::detectMarkers(Mat inImage)
 	falseCandidates.clear();
 	image = inImage;
 	cv::cvtColor(image,image2,cv::COLOR_GRAY2RGB);
+	// Mat mask = image>0;
+    // double minc[1], maxc[1];
+
+    // minMaxLoc(image, minc, maxc,NULL,NULL,mask);
+	// std::cout << minc[0] << std::endl;
+	// cv::threshold(image, image, 1, 127, cv::THRESH_TOZERO_INV);
+	// cv::imshow("testest",image);
 	quadDetector.detectQuads(image, &edInterface);
 	vector<Quad> quads = quadDetector.getQuads();
-
+	// vector<Mat> bl,wl;
 	// vector<bool> dark_check(12);
 	
 	for (int indQuad = 0; indQuad < quads.size(); indQuad++)
@@ -41,9 +48,18 @@ void Stag::detectMarkers(Mat inImage)
 			dark_inside = "white";
 		}
 		// cv::putText(image,dark_inside,quads[indQuad].corners[0],cv::FONT_HERSHEY_PLAIN,5,cv::Scalar(255,0,0));
-		// cv::imshow("test4",image);
+		cv::line(image2,quads[indQuad].corners[1],quads[indQuad].corners[2],cv::Scalar(255,0,255));
+		cv::imshow("test4",image2);
 		quads[indQuad].estimateHomography();
-		// quads[indQuad].check_color(image);
+		quads[indQuad].check_color(image,innerLocs,outerLocs);
+		if (quads[indQuad].dark_inside == true) {
+			blackLocs = innerLocs;
+			whiteLocs = outerLocs;
+		}
+		else {
+			blackLocs = outerLocs;
+			whiteLocs = innerLocs;
+		}
 		quads[indQuad].fix_white();
 		
 		
@@ -101,9 +117,8 @@ void Stag::detectMarkers(Mat inImage)
 	std::cout << "in1" << std::endl;	
 	// drawer.drawQuads(path,image2,falseCandidates);
 	std::cout << "in2" << std::endl;	
-	cv::imshow("test4",image2);
-	for (int indMarker = 0; indMarker < markers.size(); indMarker++)
-		poseRefiner.refineMarkerPose(&edInterface, markers[indMarker]);
+	// for (int indMarker = 0; indMarker < markers.size(); indMarker++)
+	// 	poseRefiner.refineMarkerPose(&edInterface, markers[indMarker],image2);
 	// std::cout << "out1" << std::endl;	
 }
 
@@ -128,18 +143,10 @@ Codeword Stag::readCode(const Quad &q)
 	// take readings from 48 code locations, 12 black border locations, and 12 white border locations
 	vector<unsigned char> samples(72);
 	// cv::Mat cl;
-	vector<Mat> bl,wl;
+	
 	// bool dark_inside = q.dark_inside;
 	
 	// std::cout << "3 " << q.dark_inside << std::endl;
-	if (q.dark_inside == true) {
-		bl = blackLocs;
-		wl = whiteLocs;
-	}
-	else {
-		bl = whiteLocs;
-		wl = blackLocs;
-	}
 
 	// a better idea may be creating a list of points to be sampled and let the OpenCV's interpolation function handle the sampling
 	for (int i = 0; i < 48; i++)
@@ -149,12 +156,12 @@ Codeword Stag::readCode(const Quad &q)
 		// std::cout << "2 " << codeLocs[i] << std::endl;
 		// std::cout << cl << std::endl;
 		// if (q.dark_inside == true)
-		cv::circle(image2,Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2)),2,cv::Scalar(0,0,255));
+		// cv::circle(image2,Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2)),2,cv::Scalar(0,0,255));
 		samples[i] = readPixelSafeBilinear(image, Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2)));
 	}
 	for (int i = 0; i < 12; i++)
 	{
-		Mat projectedPoint = q.H * bl[i];
+		Mat projectedPoint = q.H * blackLocs[i];
 		samples[i + 48] = readPixelSafeBilinear(image, Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2)));
 		// if (q.dark_inside == false) {
 		// 	samples[i+48] = 0;
@@ -163,7 +170,7 @@ Codeword Stag::readCode(const Quad &q)
 	}
 	for (int i = 0; i < 12; i++)
 	{
-		Mat projectedPoint = q.H * wl[i];
+		Mat projectedPoint = q.H * whiteLocs[i];
 		samples[i + 60] = readPixelSafeBilinear(image, Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2)));
 		// if (q.dark_inside == false) {
 		// samples[i+60] = 255;
@@ -188,8 +195,8 @@ void Stag::fillCodeLocations()
 {
 	// fill coordinates to be sampled
 	// codeLocsOut = vector<Mat>(48);
-	blackLocs = vector<Mat>(12);
-	whiteLocs = vector<Mat>(12);
+	innerLocs = vector<Mat>(12);
+	outerLocs = vector<Mat>(12);
 	// codeLocsIn = vector<Mat>(48);
 	// blackLocsIn = vector<Mat>(12);
 	// blackLocsOut = vector<Mat>(12);
@@ -252,106 +259,106 @@ void Stag::fillCodeLocations()
 		
 
 		for (int i = 0; i < 12; i++)
-			blackLocs[i] = Mat(3, 1, CV_64FC1);
+			innerLocs[i] = Mat(3, 1, CV_64FC1);
 		for (int i = 0; i < 12; i++)
-			whiteLocs[i] = Mat(3, 1, CV_64FC1);
+			outerLocs[i] = Mat(3, 1, CV_64FC1);
 
-		blackLocs[0].at<double>(0) = borderDist;
-		blackLocs[0].at<double>(1) = borderDist * 3;
-		blackLocs[0].at<double>(2) = 1;
+		innerLocs[0].at<double>(0) = borderDist;
+		innerLocs[0].at<double>(1) = borderDist * 3;
+		innerLocs[0].at<double>(2) = 1;
 
-		blackLocs[1].at<double>(0) = borderDist * 2;
-		blackLocs[1].at<double>(1) = borderDist * 2;
-		blackLocs[1].at<double>(2) = 1;
+		innerLocs[1].at<double>(0) = borderDist;
+		innerLocs[1].at<double>(1) = borderDist;
+		innerLocs[1].at<double>(2) = 1;
 
-		blackLocs[2].at<double>(0) = borderDist * 3;
-		blackLocs[2].at<double>(1) = borderDist;
-		blackLocs[2].at<double>(2) = 1;
+		innerLocs[2].at<double>(0) = borderDist * 3;
+		innerLocs[2].at<double>(1) = borderDist;
+		innerLocs[2].at<double>(2) = 1;
 
-		blackLocs[3].at<double>(0) = 1 - 3 * borderDist;
-		blackLocs[3].at<double>(1) = borderDist;
-		blackLocs[3].at<double>(2) = 1;
+		innerLocs[3].at<double>(0) = 1 - 3 * borderDist;
+		innerLocs[3].at<double>(1) = borderDist;
+		innerLocs[3].at<double>(2) = 1;
 
-		blackLocs[4].at<double>(0) = 1 - 2 * borderDist;
-		blackLocs[4].at<double>(1) = borderDist * 2;
-		blackLocs[4].at<double>(2) = 1;
+		innerLocs[4].at<double>(0) = 1 - borderDist;
+		innerLocs[4].at<double>(1) = borderDist;
+		innerLocs[4].at<double>(2) = 1;
 
-		blackLocs[5].at<double>(0) = 1 - borderDist;
-		blackLocs[5].at<double>(1) = borderDist * 3;
-		blackLocs[5].at<double>(2) = 1;
+		innerLocs[5].at<double>(0) = 1 - borderDist;
+		innerLocs[5].at<double>(1) = borderDist * 3;
+		innerLocs[5].at<double>(2) = 1;
 
-		blackLocs[6].at<double>(0) = 1 - borderDist;
-		blackLocs[6].at<double>(1) = 1 - 3 * borderDist;
-		blackLocs[6].at<double>(2) = 1;
+		innerLocs[6].at<double>(0) = 1 - borderDist;
+		innerLocs[6].at<double>(1) = 1 - 3 * borderDist;
+		innerLocs[6].at<double>(2) = 1;
 
-		blackLocs[7].at<double>(0) = 1 - 2 * borderDist;
-		blackLocs[7].at<double>(1) = 1 - 2 * borderDist;
-		blackLocs[7].at<double>(2) = 1;
+		innerLocs[7].at<double>(0) = 1 - borderDist;
+		innerLocs[7].at<double>(1) = 1 - borderDist;
+		innerLocs[7].at<double>(2) = 1;
 
-		blackLocs[8].at<double>(0) = 1 - 3 * borderDist;
-		blackLocs[8].at<double>(1) = 1 - borderDist;
-		blackLocs[8].at<double>(2) = 1;
+		innerLocs[8].at<double>(0) = 1 - 3 * borderDist;
+		innerLocs[8].at<double>(1) = 1 - borderDist;
+		innerLocs[8].at<double>(2) = 1;
 
-		blackLocs[9].at<double>(0) = borderDist * 3;
-		blackLocs[9].at<double>(1) = 1 - borderDist;
-		blackLocs[9].at<double>(2) = 1;
+		innerLocs[9].at<double>(0) = borderDist * 3;
+		innerLocs[9].at<double>(1) = 1 - borderDist;
+		innerLocs[9].at<double>(2) = 1;
 
-		blackLocs[10].at<double>(0) = borderDist * 2;
-		blackLocs[10].at<double>(1) = 1 - 2 * borderDist;
-		blackLocs[10].at<double>(2) = 1;
+		innerLocs[10].at<double>(0) = borderDist;
+		innerLocs[10].at<double>(1) = 1 - borderDist;
+		innerLocs[10].at<double>(2) = 1;
 
-		blackLocs[11].at<double>(0) = borderDist;
-		blackLocs[11].at<double>(1) = 1 - 3 * borderDist;
-		blackLocs[11].at<double>(2) = 1;
+		innerLocs[11].at<double>(0) = borderDist;
+		innerLocs[11].at<double>(1) = 1 - 3 * borderDist;
+		innerLocs[11].at<double>(2) = 1;
 
 
-		whiteLocs[0].at<double>(0) = 0.25;
-		whiteLocs[0].at<double>(1) = -borderDist;
-		whiteLocs[0].at<double>(2) = 1;
+		outerLocs[0].at<double>(0) = 0.25;
+		outerLocs[0].at<double>(1) = -borderDist;
+		outerLocs[0].at<double>(2) = 1;
 
-		whiteLocs[1].at<double>(0) = 0.5;
-		whiteLocs[1].at<double>(1) = -borderDist;
-		whiteLocs[1].at<double>(2) = 1;
+		outerLocs[1].at<double>(0) = 0.5;
+		outerLocs[1].at<double>(1) = -borderDist;
+		outerLocs[1].at<double>(2) = 1;
 
-		whiteLocs[2].at<double>(0) = 0.75;
-		whiteLocs[2].at<double>(1) = -borderDist;
-		whiteLocs[2].at<double>(2) = 1;
+		outerLocs[2].at<double>(0) = 0.75;
+		outerLocs[2].at<double>(1) = -borderDist;
+		outerLocs[2].at<double>(2) = 1;
 
-		whiteLocs[3].at<double>(0) = 1 + borderDist;
-		whiteLocs[3].at<double>(1) = 0.25;
-		whiteLocs[3].at<double>(2) = 1;
+		outerLocs[3].at<double>(0) = 1 + borderDist;
+		outerLocs[3].at<double>(1) = 0.25;
+		outerLocs[3].at<double>(2) = 1;
 
-		whiteLocs[4].at<double>(0) = 1 + borderDist;
-		whiteLocs[4].at<double>(1) = 0.5;
-		whiteLocs[4].at<double>(2) = 1;
+		outerLocs[4].at<double>(0) = 1 + borderDist;
+		outerLocs[4].at<double>(1) = 0.5;
+		outerLocs[4].at<double>(2) = 1;
 
-		whiteLocs[5].at<double>(0) = 1 + borderDist;
-		whiteLocs[5].at<double>(1) = 0.75;
-		whiteLocs[5].at<double>(2) = 1;
+		outerLocs[5].at<double>(0) = 1 + borderDist;
+		outerLocs[5].at<double>(1) = 0.75;
+		outerLocs[5].at<double>(2) = 1;
 
-		whiteLocs[6].at<double>(0) = 0.75;
-		whiteLocs[6].at<double>(1) = 1 + borderDist;
-		whiteLocs[6].at<double>(2) = 1;
+		outerLocs[6].at<double>(0) = 0.75;
+		outerLocs[6].at<double>(1) = 1 + borderDist;
+		outerLocs[6].at<double>(2) = 1;
 
-		whiteLocs[7].at<double>(0) = 0.5;
-		whiteLocs[7].at<double>(1) = 1 + borderDist;
-		whiteLocs[7].at<double>(2) = 1;
+		outerLocs[7].at<double>(0) = 0.5;
+		outerLocs[7].at<double>(1) = 1 + borderDist;
+		outerLocs[7].at<double>(2) = 1;
 
-		whiteLocs[8].at<double>(0) = 0.25;
-		whiteLocs[8].at<double>(1) = 1 + borderDist;
-		whiteLocs[8].at<double>(2) = 1;
+		outerLocs[8].at<double>(0) = 0.25;
+		outerLocs[8].at<double>(1) = 1 + borderDist;
+		outerLocs[8].at<double>(2) = 1;
 
-		whiteLocs[9].at<double>(0) = -borderDist;
-		whiteLocs[9].at<double>(1) = 0.75;
-		whiteLocs[9].at<double>(2) = 1;
+		outerLocs[9].at<double>(0) = -borderDist;
+		outerLocs[9].at<double>(1) = 0.75;
+		outerLocs[9].at<double>(2) = 1;
 
-		whiteLocs[10].at<double>(0) = -borderDist;
-		whiteLocs[10].at<double>(1) = 0.5;
-		whiteLocs[10].at<double>(2) = 1;
+		outerLocs[10].at<double>(0) = -borderDist;
+		outerLocs[10].at<double>(1) = 0.5;
+		outerLocs[10].at<double>(2) = 1;
 
-		whiteLocs[11].at<double>(0) = -borderDist;
-		whiteLocs[11].at<double>(1) = 0.25;
-		whiteLocs[11].at<double>(2) = 1;
+		outerLocs[11].at<double>(0) = -borderDist;
+		outerLocs[11].at<double>(1) = 0.25;
+		outerLocs[11].at<double>(2) = 1;
 
 }
 

@@ -124,7 +124,7 @@ void QuadDetector::detectQuads(const cv::Mat &image, EDInterface* edInterface)
 			else {
 				cv::putText(image1,"white",c1.loc,cv::FONT_HERSHEY_SIMPLEX,2,0);
 			}
-			cv::imshow("test1",image1);
+			// cv::imshow("test1",image1);
 		}
 	}
 	
