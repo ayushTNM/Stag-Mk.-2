@@ -48,13 +48,13 @@ void QuadDetector::detectQuads(const cv::Mat &image, EDInterface* edInterface)
 
 		// for (unsigned int cornerInd = 0; cornerInd < currCornerGroup.size(); cornerInd++)
 		// {
-		// 	allCurrCornerLocs[cornerInd] = currCornerGroup[cornerInd].loc;
-		// 	// Corner c1 = currCornerGroup[cornerInd];
-		// 	// Corner c2 = currCornerGroup[(cornerInd +1) % currCornerGroup.size()];
-		// 	// cv::line(image1,c1.loc,c2.loc,cv::Scalar(255,0,0));
+		// // 	allCurrCornerLocs[cornerInd] = currCornerGroup[cornerInd].loc;
+		// 	Corner c1 = currCornerGroup[cornerInd];
+		// 	Corner c2 = currCornerGroup[(cornerInd +1) % currCornerGroup.size()];
+		// 	cv::line(image1,c1.loc,c2.loc,cv::Scalar(255,0,0));
 
 		// }
-
+		// cv::imshow("haha",image1);
 		// cv::Mat mask = cv::Mat::zeros(image.rows, image.cols, CV_8U);
 		// cv::Mat out = cv::Mat::zeros(image.rows, image.cols, CV_8U);
 		// cv::fillConvexPoly(mask, allCurrCornerLocs, currCornerGroup.size(), cv::Scalar(255));
@@ -119,12 +119,12 @@ void QuadDetector::detectQuads(const cv::Mat &image, EDInterface* edInterface)
 			for (int i = 0; i < quad.corners.size();i++) {
 				cv::circle(image1,quad.corners[i],3,cv::Scalar(255,255,0));
 			}
-			if (quad.dark_inside == true)
-				cv::putText(image1,"black",c1.loc,cv::FONT_HERSHEY_SIMPLEX,2,255);
-			else {
-				cv::putText(image1,"white",c1.loc,cv::FONT_HERSHEY_SIMPLEX,2,0);
-			}
-			// cv::imshow("test1",image1);
+			// if (quad.dark_inside == true)
+			// 	cv::putText(image1,"black",c1.loc,cv::FONT_HERSHEY_SIMPLEX,2,255);
+			// else {
+			// 	cv::putText(image1,"white",c1.loc,cv::FONT_HERSHEY_SIMPLEX,2,0);
+			// }
+			cv::imshow("test1",image1);
 		}
 	}
 	

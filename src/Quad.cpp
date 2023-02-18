@@ -1,5 +1,6 @@
 #include "Quad.h"
 #include "utility.h"
+#include "markerStats.h"
 
 using cv::Point2d;
 using cv::Point3d;
@@ -71,17 +72,21 @@ void Quad::check_color(Mat image, vector<Mat> innerLocs, vector<Mat> outerLocs) 
     minMaxLoc(warped, minc, maxc,NULL,NULL,mask);
 	cv::threshold(warped, warped, minc[0], 255, cv::THRESH_OTSU + cv::THRESH_BINARY);
 	float blackLocs=0;
-	vector<cv::Mat> neededLocs = vector<cv::Mat>(8);
+	vector<cv::Mat> neededLocs = vector<cv::Mat>(12);
 
 	for (int i = 1; i < innerLocs.size(); i+=3) {
 		
 		neededLocs[i/3] = innerLocs[i];
 	}
 	float borderDist = innerLocs[0].at<double>(0)/2;
-	neededLocs[4] = (cv::Mat_ <double>(1,3) << 0.5,borderDist,1);
-	neededLocs[5] = (cv::Mat_ <double>(1,3) << borderDist,0.5,1);
-	neededLocs[6] = (cv::Mat_ <double>(1,3) << 0.5,1-borderDist,1);
-	neededLocs[7] = (cv::Mat_ <double>(1,3) << 1-borderDist,0.5,1);
+	neededLocs[4] = (cv::Mat_ <double>(1,3) << 0.3,borderDist,1);
+	neededLocs[5] = (cv::Mat_ <double>(1,3) << borderDist,0.3,1);
+	neededLocs[6] = (cv::Mat_ <double>(1,3) << 0.3,1-borderDist,1);
+	neededLocs[7] = (cv::Mat_ <double>(1,3) << 1-borderDist,0.3,1);
+	neededLocs[8] = (cv::Mat_ <double>(1,3) << 0.7,borderDist,1);
+	neededLocs[9] = (cv::Mat_ <double>(1,3) << borderDist,0.7,1);
+	neededLocs[10] = (cv::Mat_ <double>(1,3) << 0.7,1-borderDist,1);
+	neededLocs[11] = (cv::Mat_ <double>(1,3) << 1-borderDist,0.7,1);
 
 	for (int i = 0; i < neededLocs.size(); i++) {
 		if ((int)warped.at<uchar>(cv::Point2d(neededLocs[i].at<double>(0)*200,neededLocs[i].at<double>(1)*200)) == 0) {
@@ -93,7 +98,7 @@ void Quad::check_color(Mat image, vector<Mat> innerLocs, vector<Mat> outerLocs) 
 	std::cout << blackLocs << std::endl;	
 	
 
-	if (blackLocs >= 4) {
+	if (blackLocs >= 6) {
 		dark_inside= true;
 		cv::putText(warped,"Black",Point2d(0,200),cv::FONT_HERSHEY_SIMPLEX,2,cv::Scalar(255,255,255));
 	}
@@ -122,9 +127,10 @@ void Quad::check_color(Mat image, vector<Mat> innerLocs, vector<Mat> outerLocs) 
 }
 
 void Quad::fix_white() {
+	double offset = 1-(markerStats::borderRatio+markerStats::diamondRatio);
 	if (dark_inside == false) {
 		Mat matcorn(3,1,CV_64F);
-		matcorn.at<double>(0) = -(0.5 + 0.25);
+		matcorn.at<double>(0) = -(0.5 + 0.05+offset);
 		matcorn.at<double>(1) = 0.5;
 		matcorn.at<double>(2) = 1;
 		// std::cout << matcorn << std::endl;
@@ -133,7 +139,7 @@ void Quad::fix_white() {
 		// cv::circle(image2,corner1,3,cv::Scalar(255,0,0));
 		// matcorn(3,1,CV_64F);
 		matcorn.at<double>(0) = 0.5;
-		matcorn.at<double>(1) = -(0.5+0.25);
+		matcorn.at<double>(1) = -(0.5+0.05+offset);
 		matcorn.at<double>(2) = 1;
 		// std::cout << matcorn << std::endl;
 		projectedPoint = H * matcorn;
@@ -141,14 +147,14 @@ void Quad::fix_white() {
 		// cv::circle(image2,corner4,3,cv::Scalar(255,0,255));
 		
 		matcorn.at<double>(0) = 0.5;
-		matcorn.at<double>(1) = 1.5+0.25;
+		matcorn.at<double>(1) = 1.5+0.05+offset;
 		matcorn.at<double>(2) = 1;
 		// std::cout << matcorn << std::endl;
 		projectedPoint = H * matcorn;
 		corners[3] = Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2));
 		// cv::circle(image2,corner2,3,cv::Scalar(0,255,0));
 
-		matcorn.at<double>(0) = 1.5+0.25;
+		matcorn.at<double>(0) = 1.5+0.05+offset;
 		matcorn.at<double>(1) = 0.5;
 		matcorn.at<double>(2) = 1;
 		// std::cout << matcorn << std::endl;

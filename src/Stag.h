@@ -7,6 +7,7 @@
 #include "Marker.h"
 #include "Decoder.h"
 #include "PoseRefiner.h"
+#include "utility.h"
 
 class Stag
 {

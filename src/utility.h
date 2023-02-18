@@ -14,4 +14,5 @@ double crossProduct(const cv::Point2d& p1, const cv::Point2d& p2);
 
 double squaredDistance(const cv::Point2d& p1, const cv::Point2d& p2);
 
+
 #endif

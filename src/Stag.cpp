@@ -1,7 +1,7 @@
 #include "Stag.h"
 #include "Ellipse.h"
-#include "utility.h"
 #include <numeric>
+#include "markerStats.h"
 
 #define HALF_PI 1.570796326794897
 
@@ -117,8 +117,8 @@ void Stag::detectMarkers(Mat inImage)
 	std::cout << "in1" << std::endl;	
 	// drawer.drawQuads(path,image2,falseCandidates);
 	std::cout << "in2" << std::endl;	
-	// for (int indMarker = 0; indMarker < markers.size(); indMarker++)
-	// 	poseRefiner.refineMarkerPose(&edInterface, markers[indMarker],image2);
+	for (int indMarker = 0; indMarker < markers.size(); indMarker++)
+		poseRefiner.refineMarkerPose(&edInterface, markers[indMarker],image2);
 	// std::cout << "out1" << std::endl;	
 }
 
@@ -142,8 +142,11 @@ Codeword Stag::readCode(const Quad &q)
 {
 	// take readings from 48 code locations, 12 black border locations, and 12 white border locations
 	vector<unsigned char> samples(72);
+	cv::Mat image_inv;
+
+	cv::bitwise_not(image,image_inv);
 	// cv::Mat cl;
-	
+	// cv::imshow("hahaha",image_inv);
 	// bool dark_inside = q.dark_inside;
 	
 	// std::cout << "3 " << q.dark_inside << std::endl;
@@ -155,13 +158,15 @@ Codeword Stag::readCode(const Quad &q)
 		
 		// std::cout << "2 " << codeLocs[i] << std::endl;
 		// std::cout << cl << std::endl;
-		// if (q.dark_inside == true)
+		// if (q.dark_inside == false)
 		// cv::circle(image2,Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2)),2,cv::Scalar(0,0,255));
-		samples[i] = readPixelSafeBilinear(image, Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2)));
+		samples[i] = readPixelSafeBilinear(image_inv, Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2)));
 	}
 	for (int i = 0; i < 12; i++)
 	{
 		Mat projectedPoint = q.H * blackLocs[i];
+		// if (q.dark_inside == false)
+		cv::circle(image2,Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2)),2,cv::Scalar(0,0,255));
 		samples[i + 48] = readPixelSafeBilinear(image, Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2)));
 		// if (q.dark_inside == false) {
 		// 	samples[i+48] = 0;
@@ -202,41 +207,41 @@ void Stag::fillCodeLocations()
 	// blackLocsOut = vector<Mat>(12);
 	// whiteLocsIn = vector<Mat>(12);
 	// whiteLocsOut = vector<Mat>(12);
-	double innerCircleRadius, borderDist;
+	// double innerCircleRadius, borderDist;
 	// double innerCircleRadiusOut, borderDistOut;
 	// double borderDist, extra_rotation;
 
 	// code circles are located in a circle with radius outerCircleRadius
 	// std::cout << "here " << q.dark_inside << std::endl;
-	borderDist= 0.045;
-	double innerSquare = 0.8; 
-	innerCircleRadius = (0.95 * ((sqrt(2) * innerSquare) / 2))/2;
+	// borderDist= 0.045;
+	// double innerSquare = 0.85; 
+	// innerCircleRadius = (0.93 * ((sqrt(2) * innerSquare) / 2))/2;
 
 		codeLocs = vector<Mat>(48);
 		// each quadrant is rotated by HALF_PI
 		// these part is left as is for self-documenting purposes
 		for (int i = 0; i < 4; i++)
 		{
-			codeLocs[0 + i * 12] = createMatFromPolarCoords(0.088363142525988, 0.785398163397448 + i * HALF_PI, innerCircleRadius);
+			codeLocs[0 + i * 12] = createMatFromPolarCoords(0.088363142525988, 0.785398163397448 + i * HALF_PI, markerStats::innerCircleRadius);
 
-			codeLocs[1 + i * 12] = createMatFromPolarCoords(0.206935928182607, 0.459275804122858 + i * HALF_PI, innerCircleRadius);
+			codeLocs[1 + i * 12] = createMatFromPolarCoords(0.206935928182607, 0.459275804122858 + i * HALF_PI, markerStats::innerCircleRadius);
 			// codeLocs[2 + i * 12] = (cv::Mat_<double>(3,1) << 0,0,1);
-			codeLocs[2 + i * 12] = createMatFromPolarCoords(0.206935928182607, HALF_PI - 0.459275804122858 + i * HALF_PI, innerCircleRadius);
+			codeLocs[2 + i * 12] = createMatFromPolarCoords(0.206935928182607, HALF_PI - 0.459275804122858 + i * HALF_PI, markerStats::innerCircleRadius);
 
-			// codeLocs[2 + i * 12] = createMatFromPolarCoords(0.088363142525988, (angle2) - 0.785398163397448 + i * angle, innerCircleRadius);
+			// codeLocs[2 + i * 12] = createMatFromPolarCoords(0.088363142525988, (angle2) - 0.785398163397448 + i * angle, markerStats::innerCircleRadius);
 
-			codeLocs[3 + i * 12] = createMatFromPolarCoords(0.313672146827381, 0.200579720495241 + i * HALF_PI, innerCircleRadius);
-			codeLocs[4 + i * 12] = createMatFromPolarCoords(0.327493143484516, 0.591687617505840 + i * HALF_PI, innerCircleRadius);
-			codeLocs[5 + i * 12] = createMatFromPolarCoords(0.327493143484516, HALF_PI - 0.591687617505840 + i * HALF_PI, innerCircleRadius);
+			codeLocs[3 + i * 12] = createMatFromPolarCoords(0.313672146827381, 0.200579720495241 + i * HALF_PI, markerStats::innerCircleRadius);
+			codeLocs[4 + i * 12] = createMatFromPolarCoords(0.327493143484516, 0.591687617505840 + i * HALF_PI, markerStats::innerCircleRadius);
+			codeLocs[5 + i * 12] = createMatFromPolarCoords(0.327493143484516, HALF_PI - 0.591687617505840 + i * HALF_PI, markerStats::innerCircleRadius);
 			// codeLocs[5 + i * 12] = (cv::Mat_<double>(3,1) << 0,0,1);
-			codeLocs[6 + i * 12] = createMatFromPolarCoords(0.313672146827381, HALF_PI - 0.200579720495241 + i * HALF_PI, innerCircleRadius);
+			codeLocs[6 + i * 12] = createMatFromPolarCoords(0.313672146827381, HALF_PI - 0.200579720495241 + i * HALF_PI, markerStats::innerCircleRadius);
 			// codeLocs[6 + i * 12] = (cv::Mat_<double>(3,1) << 0,0,1);
-			codeLocs[7 + i * 12] = createMatFromPolarCoords(0.437421957035861, 0.145724938287167 + i * HALF_PI, innerCircleRadius);
-			codeLocs[8 + i * 12] = createMatFromPolarCoords(0.437226762361658, 0.433363129825345 + i * HALF_PI, innerCircleRadius);
-			codeLocs[9 + i * 12] = createMatFromPolarCoords(0.430628029742607, 0.785398163397448 + i * HALF_PI, innerCircleRadius);
-			codeLocs[10 + i * 12] = createMatFromPolarCoords(0.437226762361658, HALF_PI - 0.433363129825345 + i * HALF_PI, innerCircleRadius);
+			codeLocs[7 + i * 12] = createMatFromPolarCoords(0.437421957035861, 0.145724938287167 + i * HALF_PI, markerStats::innerCircleRadius);
+			codeLocs[8 + i * 12] = createMatFromPolarCoords(0.437226762361658, 0.433363129825345 + i * HALF_PI, markerStats::innerCircleRadius);
+			codeLocs[9 + i * 12] = createMatFromPolarCoords(0.430628029742607, 0.785398163397448 + i * HALF_PI, markerStats::innerCircleRadius);
+			codeLocs[10 + i * 12] = createMatFromPolarCoords(0.437226762361658, HALF_PI - 0.433363129825345 + i * HALF_PI, markerStats::innerCircleRadius);
 			// codeLocs[10 + i * 12] = (cv::Mat_<double>(3,1) << 0,0,1);
-			codeLocs[11 + i * 12] = createMatFromPolarCoords(0.437421957035861, HALF_PI - 0.145724938287167 + i * HALF_PI, innerCircleRadius);
+			codeLocs[11 + i * 12] = createMatFromPolarCoords(0.437421957035861, HALF_PI - 0.145724938287167 + i * HALF_PI, markerStats::innerCircleRadius);
 			// codeLocs[11 + i * 12] = (cv::Mat_<double>(3,1) << 0,0,1);
 			// cv::Mat test,test1;
 		// for (int j =0; j < 4;j++) {
@@ -263,100 +268,100 @@ void Stag::fillCodeLocations()
 		for (int i = 0; i < 12; i++)
 			outerLocs[i] = Mat(3, 1, CV_64FC1);
 
-		innerLocs[0].at<double>(0) = borderDist;
-		innerLocs[0].at<double>(1) = borderDist * 3;
+		innerLocs[0].at<double>(0) = markerStats::borderRatio;
+		innerLocs[0].at<double>(1) = markerStats::borderRatio * 3;
 		innerLocs[0].at<double>(2) = 1;
 
-		innerLocs[1].at<double>(0) = borderDist;
-		innerLocs[1].at<double>(1) = borderDist;
+		innerLocs[1].at<double>(0) = markerStats::borderRatio;
+		innerLocs[1].at<double>(1) = markerStats::borderRatio;
 		innerLocs[1].at<double>(2) = 1;
 
-		innerLocs[2].at<double>(0) = borderDist * 3;
-		innerLocs[2].at<double>(1) = borderDist;
+		innerLocs[2].at<double>(0) = markerStats::borderRatio * 3;
+		innerLocs[2].at<double>(1) = markerStats::borderRatio;
 		innerLocs[2].at<double>(2) = 1;
 
-		innerLocs[3].at<double>(0) = 1 - 3 * borderDist;
-		innerLocs[3].at<double>(1) = borderDist;
+		innerLocs[3].at<double>(0) = 1 - 3 * markerStats::borderRatio;
+		innerLocs[3].at<double>(1) = markerStats::borderRatio;
 		innerLocs[3].at<double>(2) = 1;
 
-		innerLocs[4].at<double>(0) = 1 - borderDist;
-		innerLocs[4].at<double>(1) = borderDist;
+		innerLocs[4].at<double>(0) = 1 - markerStats::borderRatio;
+		innerLocs[4].at<double>(1) = markerStats::borderRatio;
 		innerLocs[4].at<double>(2) = 1;
 
-		innerLocs[5].at<double>(0) = 1 - borderDist;
-		innerLocs[5].at<double>(1) = borderDist * 3;
+		innerLocs[5].at<double>(0) = 1 - markerStats::borderRatio;
+		innerLocs[5].at<double>(1) = markerStats::borderRatio * 3;
 		innerLocs[5].at<double>(2) = 1;
 
-		innerLocs[6].at<double>(0) = 1 - borderDist;
-		innerLocs[6].at<double>(1) = 1 - 3 * borderDist;
+		innerLocs[6].at<double>(0) = 1 - markerStats::borderRatio;
+		innerLocs[6].at<double>(1) = 1 - 3 * markerStats::borderRatio;
 		innerLocs[6].at<double>(2) = 1;
 
-		innerLocs[7].at<double>(0) = 1 - borderDist;
-		innerLocs[7].at<double>(1) = 1 - borderDist;
+		innerLocs[7].at<double>(0) = 1 - markerStats::borderRatio;
+		innerLocs[7].at<double>(1) = 1 - markerStats::borderRatio;
 		innerLocs[7].at<double>(2) = 1;
 
-		innerLocs[8].at<double>(0) = 1 - 3 * borderDist;
-		innerLocs[8].at<double>(1) = 1 - borderDist;
+		innerLocs[8].at<double>(0) = 1 - 3 * markerStats::borderRatio;
+		innerLocs[8].at<double>(1) = 1 - markerStats::borderRatio;
 		innerLocs[8].at<double>(2) = 1;
 
-		innerLocs[9].at<double>(0) = borderDist * 3;
-		innerLocs[9].at<double>(1) = 1 - borderDist;
+		innerLocs[9].at<double>(0) = markerStats::borderRatio * 3;
+		innerLocs[9].at<double>(1) = 1 - markerStats::borderRatio;
 		innerLocs[9].at<double>(2) = 1;
 
-		innerLocs[10].at<double>(0) = borderDist;
-		innerLocs[10].at<double>(1) = 1 - borderDist;
+		innerLocs[10].at<double>(0) = markerStats::borderRatio;
+		innerLocs[10].at<double>(1) = 1 - markerStats::borderRatio;
 		innerLocs[10].at<double>(2) = 1;
 
-		innerLocs[11].at<double>(0) = borderDist;
-		innerLocs[11].at<double>(1) = 1 - 3 * borderDist;
+		innerLocs[11].at<double>(0) = markerStats::borderRatio;
+		innerLocs[11].at<double>(1) = 1 - 3 * markerStats::borderRatio;
 		innerLocs[11].at<double>(2) = 1;
 
 
 		outerLocs[0].at<double>(0) = 0.25;
-		outerLocs[0].at<double>(1) = -borderDist;
+		outerLocs[0].at<double>(1) = -markerStats::borderRatio;
 		outerLocs[0].at<double>(2) = 1;
 
 		outerLocs[1].at<double>(0) = 0.5;
-		outerLocs[1].at<double>(1) = -borderDist;
+		outerLocs[1].at<double>(1) = -markerStats::borderRatio;
 		outerLocs[1].at<double>(2) = 1;
 
 		outerLocs[2].at<double>(0) = 0.75;
-		outerLocs[2].at<double>(1) = -borderDist;
+		outerLocs[2].at<double>(1) = -markerStats::borderRatio;
 		outerLocs[2].at<double>(2) = 1;
 
-		outerLocs[3].at<double>(0) = 1 + borderDist;
+		outerLocs[3].at<double>(0) = 1 + markerStats::borderRatio;
 		outerLocs[3].at<double>(1) = 0.25;
 		outerLocs[3].at<double>(2) = 1;
 
-		outerLocs[4].at<double>(0) = 1 + borderDist;
+		outerLocs[4].at<double>(0) = 1 + markerStats::borderRatio;
 		outerLocs[4].at<double>(1) = 0.5;
 		outerLocs[4].at<double>(2) = 1;
 
-		outerLocs[5].at<double>(0) = 1 + borderDist;
+		outerLocs[5].at<double>(0) = 1 + markerStats::borderRatio;
 		outerLocs[5].at<double>(1) = 0.75;
 		outerLocs[5].at<double>(2) = 1;
 
 		outerLocs[6].at<double>(0) = 0.75;
-		outerLocs[6].at<double>(1) = 1 + borderDist;
+		outerLocs[6].at<double>(1) = 1 + markerStats::borderRatio;
 		outerLocs[6].at<double>(2) = 1;
 
 		outerLocs[7].at<double>(0) = 0.5;
-		outerLocs[7].at<double>(1) = 1 + borderDist;
+		outerLocs[7].at<double>(1) = 1 + markerStats::borderRatio;
 		outerLocs[7].at<double>(2) = 1;
 
 		outerLocs[8].at<double>(0) = 0.25;
-		outerLocs[8].at<double>(1) = 1 + borderDist;
+		outerLocs[8].at<double>(1) = 1 + markerStats::borderRatio;
 		outerLocs[8].at<double>(2) = 1;
 
-		outerLocs[9].at<double>(0) = -borderDist;
+		outerLocs[9].at<double>(0) = -markerStats::borderRatio;
 		outerLocs[9].at<double>(1) = 0.75;
 		outerLocs[9].at<double>(2) = 1;
 
-		outerLocs[10].at<double>(0) = -borderDist;
+		outerLocs[10].at<double>(0) = -markerStats::borderRatio;
 		outerLocs[10].at<double>(1) = 0.5;
 		outerLocs[10].at<double>(2) = 1;
 
-		outerLocs[11].at<double>(0) = -borderDist;
+		outerLocs[11].at<double>(0) = -markerStats::borderRatio;
 		outerLocs[11].at<double>(1) = 0.25;
 		outerLocs[11].at<double>(2) = 1;
 
