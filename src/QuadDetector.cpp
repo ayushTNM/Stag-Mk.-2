@@ -7,85 +7,35 @@
 
 using cv::Point2d;
 
-cv::Mat image1;
-
 QuadDetector::QuadDetector(bool inKeepLogs)
 {
 	keepLogs = inKeepLogs;
 }
 
-
-void QuadDetector::detectQuads(const cv::Mat &image, EDInterface* edInterface)
+void QuadDetector::detectQuads(const cv::Mat &image, EDInterface *edInterface)
 {
-	cv::cvtColor(image,image1,cv::COLOR_GRAY2BGR);
 	cornerGroups.clear();
 	distortedQuads.clear();
 	quads.clear();
 
 	edInterface->runEDPFandEDLines(image);
 
-	EDLines* edLines = edInterface->getEDLines();
+	EDLines *edLines = edInterface->getEDLines();
 
 	vector<vector<int>> lineGroups = groupLines(image, edInterface);
 
-	vector<bool> dark_insides;
-	// bool dark_inside;/
-	dark_insides = detectCorners(edInterface, lineGroups);
-	
+	detectCorners(edInterface, lineGroups);
 
 	// create quads using corner groups
 	for (int indCornerGroup = 0; indCornerGroup < cornerGroups.size(); indCornerGroup++)
 	{
 		// assumed that at least 3 corners are needed. actually, we need at least two opposite corners.
 		// however, it is assumed that there is an additional corner between opposite corners, hence the need for 3 corners
-		
+
 		if (cornerGroups[indCornerGroup].size() < 3)
 			continue;
-			
 
 		vector<Corner> currCornerGroup = cornerGroups[indCornerGroup];
-		// cv::Point allCurrCornerLocs[currCornerGroup.size()];
-
-		// for (unsigned int cornerInd = 0; cornerInd < currCornerGroup.size(); cornerInd++)
-		// {
-		// // 	allCurrCornerLocs[cornerInd] = currCornerGroup[cornerInd].loc;
-		// 	Corner c1 = currCornerGroup[cornerInd];
-		// 	Corner c2 = currCornerGroup[(cornerInd +1) % currCornerGroup.size()];
-		// 	cv::line(image1,c1.loc,c2.loc,cv::Scalar(255,0,0));
-
-		// }
-		// cv::imshow("haha",image1);
-		// cv::Mat mask = cv::Mat::zeros(image.rows, image.cols, CV_8U);
-		// cv::Mat out = cv::Mat::zeros(image.rows, image.cols, CV_8U);
-		// cv::fillConvexPoly(mask, allCurrCornerLocs, currCornerGroup.size(), cv::Scalar(255));
-		// // cv::erode(mask,mask, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)),cv::Point(-1,-1),3);
-		// // cv::Mat mask2 = cv::Mat(image.rows, image.cols, CV_8U, -1);
-		// // cv::erode(mask,mask2, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)),cv::Point(-1,-1),4);
-		
-		// image.copyTo(out,mask);
-		// // std::cout << edge << std::endl;
-		// cv::Mat mask_black = out>0;
-		// double minc[1], maxc[1];
-
-		// minMaxLoc(out, minc, maxc,NULL,NULL,mask_black);
-		// cv::threshold(out, out, 255-maxc[0], 255, cv::THRESH_OTSU + cv::THRESH_BINARY);
-		// // mask-=mask2;
-		// morphologyEx(mask, mask,
-        //          cv::MORPH_GRADIENT, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)),
-        //          cv::Point(-1, -1), 3);
-		// cv::Mat edge = cv::Mat::zeros(image.rows, image.cols, CV_8U);
-		// cv::imshow("hahaha",out);
-		// out.copyTo(edge,mask);
-		// std::cout << cv::countNonZero(edge) << " " << cv::countNonZero(mask)*0.5 << std::endl;
-		// if (cv::countNonZero(edge) < cv::countNonZero(mask)*0.5) {
-		// 	dark_inside = true;
-		// 	cv::putText(edge,"Black",allCurrCornerLocs[0],cv::FONT_HERSHEY_SIMPLEX,2,255);
-		// }
-		// else {
-		// 	dark_inside = false;
-		// }
-		// out2.setTo(255,out2==-1);
-		
 
 		for (unsigned int cornerInd = 0; cornerInd < currCornerGroup.size(); cornerInd++)
 		{
@@ -97,16 +47,14 @@ void QuadDetector::detectQuads(const cv::Mat &image, EDInterface* edInterface)
 			if (i1 == i4)
 				c4 = Corner(Point2d(INFINITY, INFINITY), LineSegment(), LineSegment());
 
-			vector<Corner> corners = { c1, c2, c3, c4 };
+			vector<Corner> corners = {c1, c2, c3, c4};
+
 			if (!checkIfCornersFormQuad(corners, edInterface))
 				continue;
-			
-				
-			vector<Point2d> cornerLocs = { corners[0].loc, corners[1].loc, corners[2].loc, corners[3].loc };
 
+			vector<Point2d> cornerLocs = {corners[0].loc, corners[1].loc, corners[2].loc, corners[3].loc};
 
-
-			Quad quad(cornerLocs,dark_insides[indCornerGroup]);
+			Quad quad(cornerLocs);
 
 			// eliminate if projective distortion is larger than the threshold
 			if (quad.projectiveDistortion > thresProjectiveDistortion)
@@ -116,43 +64,29 @@ void QuadDetector::detectQuads(const cv::Mat &image, EDInterface* edInterface)
 			}
 			else
 				quads.push_back(quad);
-			for (int i = 0; i < quad.corners.size();i++) {
-				cv::circle(image1,quad.corners[i],3,cv::Scalar(255,255,0));
-			}
-			// if (quad.dark_inside == true)
-			// 	cv::putText(image1,"black",c1.loc,cv::FONT_HERSHEY_SIMPLEX,2,255);
-			// else {
-			// 	cv::putText(image1,"white",c1.loc,cv::FONT_HERSHEY_SIMPLEX,2,0);
-			// }
-			cv::imshow("test1",image1);
 		}
 	}
-	
 }
 
-
-const vector<vector<Corner>>& QuadDetector::getCornerGroups()
+const vector<vector<Corner>> &QuadDetector::getCornerGroups()
 {
 	return cornerGroups;
 }
 
-
-const vector<Quad>& QuadDetector::getQuads() const
+const vector<Quad> &QuadDetector::getQuads() const
 {
 	return quads;
 }
 
-
-const vector<Quad>& QuadDetector::getDistortedQuads() const
+const vector<Quad> &QuadDetector::getDistortedQuads() const
 {
 	return distortedQuads;
 }
 
-
-vector<vector<int>> QuadDetector::groupLines(const cv::Mat &image, EDInterface* edInterface)
+vector<vector<int>> QuadDetector::groupLines(const cv::Mat &image, EDInterface *edInterface)
 {
 	vector<vector<int>> lineGroups;
-	EDLines* edLines = edInterface->getEDLines();
+	EDLines *edLines = edInterface->getEDLines();
 
 	// if there are more than 4 line segments in an edge segment, form a group
 	int noOfLinesInCurrentSegment = 0;
@@ -201,12 +135,11 @@ vector<vector<int>> QuadDetector::groupLines(const cv::Mat &image, EDInterface* 
 	return lineGroups;
 }
 
-
-vector<bool> QuadDetector::detectCorners(EDInterface* edInterface, const vector<vector<int>> &lineGroups)
+void QuadDetector::detectCorners(EDInterface *edInterface, const vector<vector<int>> &lineGroups)
 {
 	cornerGroups = vector<vector<Corner>>();
-	EdgeMap* edgeMap = edInterface->getEdgeMap();
-	EDLines* edLines = edInterface->getEDLines();
+	EdgeMap *edgeMap = edInterface->getEdgeMap();
+	EDLines *edLines = edInterface->getEDLines();
 	vector<bool> dark_insides = vector<bool>();
 	vector<bool> dark_insides_line = vector<bool>();
 
@@ -226,15 +159,8 @@ vector<bool> QuadDetector::detectCorners(EDInterface* edInterface, const vector<
 
 			// the below condition direction (<=) looks for quads that are darker inside
 			// if you are looking for quads that are lighter inside, simply change the condition direction (>=)
-			if (crossProduct(vec1start1end, vec1start2end) < 0) {
-				dark_insides_line.push_back(false);
-				// continue;
-			}
-			else if (crossProduct(vec1start1end, vec1start2end) > 0) {
-				dark_insides_line.push_back(true);
-				// continue;
-			}
-			else {
+			if (crossProduct(vec1start1end, vec1start2end) == 0)
+			{
 				continue;
 			}
 
@@ -255,39 +181,29 @@ vector<bool> QuadDetector::detectCorners(EDInterface* edInterface, const vector<
 			if (!onTheSegment)
 				continue;
 
-
 			if (!createdNewCornerGroup)
 			{
 				cornerGroups.push_back(vector<Corner>());
 				createdNewCornerGroup = true;
-				// for(int i=0; i < dark_insides_line.size(); i++)
-				// 	std::cout << dark_insides_line[i] << ' ';
-				// std::cout << std::endl;
-				// std::cout << (std::count(dark_insides_line.begin(), dark_insides_line.end(), 1) > std::count(dark_insides_line.begin(), dark_insides_line.end(), 0)) << std::endl;
-				dark_insides.push_back(std::count(dark_insides_line.begin(), dark_insides_line.end(), 1) >= std::count(dark_insides_line.begin(), dark_insides_line.end(), 0));
-				dark_insides_line = vector<bool>();
 			}
 			cornerGroups.back().push_back(Corner(inters, line1, line2));
-			// cv::circle(image1,cv::Point(inters.x,inters.y),3,cv::Scalar(2550,0),3);
 		}
 	}
-	return dark_insides;
 }
 
-
-bool QuadDetector::checkIfCornersFormQuad(vector<Corner> &corners, EDInterface* edInterface)
+bool QuadDetector::checkIfCornersFormQuad(vector<Corner> &corners, EDInterface *edInterface)
 {
 	if (!checkIfTwoCornersFaceEachother(corners[0], corners[2]))
 		return false;
 
-	
 	// estimate corners[1] and corners[3] using corners[0] and corners[2]
 	Corner estC1, estC3;
+
 	// there is two combinations when forming corners[1] and corners[3]
 	// we try the first one, check if it works. if not, use the second one.
 	estC1 = Corner(edInterface->intersectionOfLineSegments(corners[0].l1, corners[2].l1), corners[0].l1, corners[2].l1);
 	estC3 = Corner(edInterface->intersectionOfLineSegments(corners[0].l2, corners[2].l2), corners[0].l2, corners[2].l2);
-	vector<Corner> estCorners = { corners[0], estC1, corners[2], estC3 };
+	vector<Corner> estCorners = {corners[0], estC1, corners[2], estC3};
 	if (!checkIfQuadIsSimple(estCorners))
 	{
 		estC1 = Corner(edInterface->intersectionOfLineSegments(corners[0].l1, corners[2].l2), corners[0].l1, corners[2].l2);
@@ -297,9 +213,7 @@ bool QuadDetector::checkIfCornersFormQuad(vector<Corner> &corners, EDInterface* 
 	}
 	if (!checkIfQuadIsSimple(estCorners))
 		return false;
-	// for (int c = 0; c < corners.size()-1;c++) {
-	// 	cv::line(image1, corners[c].loc,corners[c+1].loc,cv::Scalar(255,0,0),2);
-	// }
+
 	// check the distances between detected corners and estimated corners
 	// if they are close enough, detected corners are used
 	double distC1estC1 = squaredDistance(corners[1].loc, estC1.loc);
@@ -359,12 +273,21 @@ bool QuadDetector::checkIfCornersFormQuad(vector<Corner> &corners, EDInterface* 
 		corners[3] = temp;
 	}
 
+	// remove any quads with infinity coordinates
+	for (int c = 0; c < corners.size(); c++)
+	{
+		if (abs(corners[c].loc.x) + abs(corners[c].loc.y) == INFINITY)
+		{
+			return false;
+		}
+	}
+
 	return true;
 }
 
-
 bool QuadDetector::checkIfQuadIsSimple(const vector<Corner> &corners)
 {
+
 	Point2d vec13(corners[2].loc.x - corners[0].loc.x, corners[2].loc.y - corners[0].loc.y);
 	Point2d vec12(corners[1].loc.x - corners[0].loc.x, corners[1].loc.y - corners[0].loc.y);
 	Point2d vec14(corners[3].loc.x - corners[0].loc.x, corners[3].loc.y - corners[0].loc.y);
@@ -382,8 +305,7 @@ bool QuadDetector::checkIfQuadIsSimple(const vector<Corner> &corners)
 	return true;
 }
 
-
-bool QuadDetector::checkIfTwoCornersFaceEachother(const Corner& c1, const Corner& c2)
+bool QuadDetector::checkIfTwoCornersFaceEachother(const Corner &c1, const Corner &c2)
 {
 	// for both corners, we need its location and a point from each of its line segments
 	// rather than using any point on the line segment, we choose the furthermost point from Corner.loc

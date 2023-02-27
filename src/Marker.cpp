@@ -1,4 +1,5 @@
 #include "Marker.h"
+#include "utility.h"
 
 using cv::Point2d;
 
@@ -9,7 +10,6 @@ Marker::Marker(const Quad &q, int inId)
 	projectiveDistortion = q.projectiveDistortion;
 	H = q.H.clone();
 	center = q.center;
-	dark_inside = q.dark_inside;
 
 	id = inId;
 	C = cv::Mat(1, 1, CV_64FC1);
@@ -23,7 +23,6 @@ Marker::Marker(const Marker &m)
 	projectiveDistortion = m.projectiveDistortion;
 	H = m.H.clone();
 	center = m.center;
-	dark_inside = m.dark_inside;
 
 	id = m.id;
 	C = m.C;
@@ -61,6 +60,18 @@ void Marker::shiftCorners2(int shift)
 		return;
 
 	// have to recalculate homography after shift
-	// std::cout << dark_inside << std::endl;
 	estimateHomography();
+}
+
+float Marker::avgMarkerDistRatio (Marker marker2) {
+	float sum = 0;
+	float markerLen = sqrt(squaredDistance(corners[0],corners[1]));
+
+	for (int c=0; c < corners.size();c++)
+		sum += sqrt(squaredDistance(corners[c],marker2.corners[c]));
+
+	float mean = sum/8; // 2x4 corners
+	
+	// average distance between markers as ratio of current marker
+	return mean/markerLen;
 }

@@ -11,7 +11,7 @@ Mat optEllipse;
 class Refine;
 
 
-void PoseRefiner::refineMarkerPose(EDInterface* edInterface, Marker& marker, cv::Mat image)
+void PoseRefiner::refineMarkerPose(EDInterface* edInterface, Marker& marker)
 {
 	// we find an edge segment loop that belongs to the circular border, and fit an ellipse to it
 	// the edge segment loop needs pass closely to the circular border when backprojected
@@ -20,21 +20,9 @@ void PoseRefiner::refineMarkerPose(EDInterface* edInterface, Marker& marker, cv:
 	// these are the points to which the distances are to be sampled. left as is for documentation purposes
 	static const double sinVals[36] = { 0.000000, 0.173648, 0.342020, 0.500000, 0.642788, 0.766044, 0.866025, 0.939693, 0.984808, 1.000000, 0.984808, 0.939693, 0.866025, 0.766044, 0.642788, 0.500000, 0.342020, 0.173648, 0.000000, -0.173648, -0.342020, -0.500000, -0.642788, -0.766044, -0.866025, -0.939693, -0.984808, -1.000000, -0.984808, -0.939693, -0.866025, -0.766044, -0.642788, -0.500000, -0.342020, -0.173648 };
 	vector<Point2d> samplePoints(36);
-	// double length = (sqrt(2)*((outerCircle-0.01)*((diamond)/2)))/2;/
 	for (int i = 0; i < 36; i++)
-		samplePoints[i] = Point2d(0.5 + markerStats::diamondLength * sinVals[(i + 9) % 36], 0.5 + markerStats::diamondLength * sinVals[i]);
-
-	// static const double sinVals[36] = { 0.000000, 1/9, 2/9, 3/9, 4/9, 5/9, 6/9, 7/9, 8/9, 1.000000, 1-(1/9), 1-(2/9), 1-(3/9), 1-(4/9), 1-(5/9), 1-(6/9), 1-(7/9), 1-(8/9), 0.000000, -0.173648, -0.342020, -0.500000, -0.642788, -0.766044, -0.866025, -0.939693, -0.984808, -1.000000, -0.984808, -0.939693, -0.866025, -0.766044, -0.642788, -0.500000, -0.342020, -0.173648 };
-	// for (float i = 0; i < 9; i++) {
-	// 	// float size = i/9;
-	// 	samplePoints[i] = Point2d(0.5 + (0.4 * i/9), 0.5 + (0.4 * (1.0-(i/9))));
-	// 	samplePoints[i+9] = Point2d(0.5 + (0.4 * (1.0-(i/9))),0.5 + -(0.4 * i/9));
-	// 	samplePoints[i+18] = Point2d(0.5 + -(0.4 * (1.0-(i/9))), 0.5 + (0.4 * i/9));
-	// 	samplePoints[i+27] = Point2d(0.5 + -(0.4 * i/9), 0.5 + -(0.4 * (1.0-(i/9))));
-		
-	// 	// std::cout << i << " " << samplePoints[i] << " ";
-	// }
-	// std::cout << std::endl;
+		samplePoints[i] = Point2d(0.5 + markerStats::outerCircleRadius * sinVals[(i + 9) % 36], 0.5 + markerStats::outerCircleRadius * sinVals[i]);
+	
 	// find the edge segment loop that is most likely to belong to the ellipse
 	EdgeMap* edgeMap = edInterface->getEdgeMap();
 	int indChosenSegment = -1;
@@ -84,15 +72,10 @@ void PoseRefiner::refineMarkerPose(EDInterface* edInterface, Marker& marker, cv:
 		{
 			Mat edgePix = (cv::Mat_<double>(3, 1) << edgeMap->segments[indEdgeSegment].pixels[indEdgePix].c, edgeMap->segments[indEdgeSegment].pixels[indEdgePix].r, 1);
 			Mat projEdgePix = Hinv * edgePix;
-			cv::circle(image,cv::Point2d(edgePix.at<double>(0),edgePix.at<double>(1)),2,cv::Scalar(0,0,255));
 
 			projPixels[indEdgePix] = Point2d(projEdgePix.at<double>(0) / projEdgePix.at<double>(2), projEdgePix.at<double>(1) / projEdgePix.at<double>(2));
 			for (int sampleInd = 0; sampleInd < 36; sampleInd++)
 			{
-				// Mat test1 = (cv::Mat_<double>(3, 1) << samplePoints[sampleInd].x, samplePoints[sampleInd].y, 1);
-				// Mat test = marker.H * test1;
-				// cv::circle(image,cv::Point2f(test.at<double>(0)/test.at<double>(2),test.at<double>(1)/test.at<double>(2)),2,cv::Scalar(0,255,0));
-				// cv::imshow("test41",image);
 				double dist = sqrt((projPixels[indEdgePix].x - samplePoints[sampleInd].x) * (projPixels[indEdgePix].x - samplePoints[sampleInd].x) + (projPixels[indEdgePix].y - samplePoints[sampleInd].y) * (projPixels[indEdgePix].y - samplePoints[sampleInd].y));
 
 				if (dist < sampleErrors[sampleInd])
@@ -245,8 +228,8 @@ public:
 		customEllipse projEllipse(projEllipseCoeff.data());
 
 		vector<double> errors;
-		errors.push_back(abs(projEllipse.GetSemiMajorAxis() - markerStats::diamondLength));
-		errors.push_back(abs(projEllipse.GetSemiMinorAxis() - markerStats::diamondLength));
+		errors.push_back(abs(projEllipse.GetSemiMajorAxis() - markerStats::outerCircleRadius));
+		errors.push_back(abs(projEllipse.GetSemiMinorAxis() - markerStats::outerCircleRadius));
 		errors.push_back(abs(projEllipse.GetCenterX() - 0.5));
 		errors.push_back(abs(projEllipse.GetCenterY() - 0.5));
 		return std::accumulate(errors.begin(), errors.end(), (double)0);

@@ -47,7 +47,7 @@ class QuadDetector
 
 	// detects corners as intersections of consecutive line segments on an edge segment
 	// (with the condition that the intersection lies on the same edge segment)
-	vector<bool> detectCorners(EDInterface* edInterface, const vector<vector<int>> &lineGroups);
+	void detectCorners(EDInterface* edInterface, const vector<vector<int>> &lineGroups);
 
 	// returns true if the corners form a quad
 	// will replace corners[1] or corners[3] with estimated corners if needed

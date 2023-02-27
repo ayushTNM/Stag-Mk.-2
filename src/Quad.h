@@ -13,17 +13,17 @@ public:
 	vector<cv::Point2d> corners;
 	cv::Point3d lineInf;
 	double projectiveDistortion = 0;
-	bool dark_inside;
+	bool black_square;
 	cv::Mat H;
 	cv::Point2d center;
 
 	void calculateLineAtInfinity();
 	void calculateProjectiveDistortion();
-	void check_color(cv::Mat image, vector<cv::Mat> blackLocs, vector<cv::Mat> whiteLocs);
+	void check_color(cv::Mat image, vector<cv::Mat> innerLocs);
 	void fix_white();
 
 	Quad(){}
-	Quad(vector<cv::Point2d> inCorners, bool dark_inside);
+	Quad(vector<cv::Point2d> inCorners);
 	Quad(const Quad &q);
 	void estimateHomography();
 };
