@@ -2,8 +2,11 @@
 *.so
 *.o
 *.swp
+*.user
 build/
 app/
 .vscode/
+lib/
 ref/marker generator/bin/
 ref/marker generator/obj/
+ref/marker generator/.vs/
