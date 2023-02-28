@@ -12,7 +12,6 @@ public:
 	Marker(const Quad &q, int inId);
 	Marker(const Marker &m);
 	void shiftCorners2(int shift);
-	float avgMarkerDistRatio (Marker marker2);
 };
 
 #endif

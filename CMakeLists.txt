@@ -1,5 +1,5 @@
 
-project(Stag)
+project(Stag2)
 
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release)
@@ -29,12 +29,12 @@ include_directories(
     src/ED/
 )
 add_library(
-    LibStag SHARED
+    LibStag2 SHARED
     ${SRC_FILE1}
     ${SRC_FILE2}
 )
 target_link_libraries(
-    LibStag
+    LibStag2
     ${OpenCV_LIBS}
 )
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/app)
@@ -46,5 +46,5 @@ add_executable(
 
 target_link_libraries(
     testrun
-    LibStag
+    LibStag2
 )

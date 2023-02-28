@@ -1,4 +1,4 @@
-#include "Stag.h"
+#include "Stag2.h"
 #include "Ellipse.h"
 #include <numeric>
 #include "markerStats.h"
@@ -8,7 +8,7 @@
 using cv::Mat;
 using cv::Point2d;
 
-Stag::Stag(int libraryHD, int inErrorCorrection, bool inKeepLogs)
+Stag2::Stag2(int libraryHD, int inErrorCorrection, bool inKeepLogs)
 {
 	keepLogs = inKeepLogs;
 	errorCorrection = inErrorCorrection;
@@ -17,7 +17,7 @@ Stag::Stag(int libraryHD, int inErrorCorrection, bool inKeepLogs)
 	decoder = Decoder(libraryHD);
 }
 
-void Stag::detectMarkers(Mat inImage)
+void Stag2::detectMarkers(Mat inImage)
 {
 	// clear vectors
 	groupedMarkers.clear();
@@ -54,76 +54,15 @@ void Stag::detectMarkers(Mat inImage)
 
 			// refine pose of marker
 			poseRefiner.refineMarkerPose(&edInterface, marker);
-
-			// group duplicate markers
-			if (groupedMarkers.size() == 0)
-			{
-				groupedMarkers.push_back(vector<Marker>());
-				groupedMarkers.back().push_back(marker);
-			}
-			else
-			{
-				Marker prev_marker = groupedMarkers.back().back();
-
-				// group if matching id and distance between corners is less than 15% of prev_marker length
-				if (prev_marker.id == marker.id && prev_marker.avgMarkerDistRatio(marker) < 0.15)
-					groupedMarkers.back().push_back(marker);
-				else
-				{
-					groupedMarkers.push_back(vector<Marker>());
-					groupedMarkers.back().push_back(marker);
-				}
-			}
+			markers.push_back(marker);
 		}
 
 		else if (keepLogs)
 			falseCandidates.push_back(quads[indQuad]);
 	}
-
-	markers.clear();
-	averageGroupedMarkers();
 }
 
-void Stag::averageGroupedMarkers()
-{
-	vector<cv::Point2d> avgCorners;
-	for (int i = 0; i < groupedMarkers.size(); i++)
-	{
-		if (groupedMarkers[i].size() > 0)
-		{
-			avgCorners = calcAvgCorners(groupedMarkers[i]);
-			Quad test(avgCorners);
-			markers.push_back(Marker(test, groupedMarkers[i][0].id));
-			markers.back().estimateHomography();
-			poseRefiner.refineMarkerPose(&edInterface, markers.back());
-		}
-	}
-}
-
-vector<cv::Point2d> Stag::calcAvgCorners(vector<Marker> markers)
-{
-	vector<cv::Point2d> avgCorners(4);
-
-	avgCorners = markers[0].corners;
-
-	for (int i = 1; i < markers.size(); i++)
-	{
-		avgCorners[0] += markers[i].corners[0];
-		avgCorners[1] += markers[i].corners[1];
-		avgCorners[2] += markers[i].corners[2];
-		avgCorners[3] += markers[i].corners[3];
-	}
-
-	for (int i = 0; i < avgCorners.size(); i++)
-	{
-		avgCorners[i].x /= markers.size();
-		avgCorners[i].y /= markers.size();
-	}
-
-	return avgCorners;
-}
-
-void Stag::logResults(Mat image, string show, bool save, string path)
+void Stag2::logResults(Mat image, string show, bool save, string path)
 {
 	vector<std::pair<string, Mat>> drawnImages;
 
@@ -173,7 +112,7 @@ void Stag::logResults(Mat image, string show, bool save, string path)
 }
 
 vector<double> test1;
-Codeword Stag::readCode(const Quad &q)
+Codeword Stag2::readCode(const Quad &q)
 {
 	// take readings from 48 code locations, 12 black border locations, and 12 white border locations
 	vector<unsigned char> samples(72);
@@ -209,7 +148,7 @@ Codeword Stag::readCode(const Quad &q)
 	return c;
 }
 
-void Stag::fillCodeLocations()
+void Stag2::fillCodeLocations()
 {
 	blackLocs = vector<Mat>(12);
 	whiteLocs = vector<Mat>(12);
@@ -336,7 +275,7 @@ void Stag::fillCodeLocations()
 	whiteLocs[11].at<double>(2) = 1;
 }
 
-Mat Stag::createMatFromPolarCoords(double radius, double radians, double circleRadius)
+Mat Stag2::createMatFromPolarCoords(double radius, double radians, double circleRadius)
 {
 	Mat point(3, 1, CV_64FC1);
 	test1.push_back(radius);

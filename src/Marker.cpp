@@ -62,16 +62,3 @@ void Marker::shiftCorners2(int shift)
 	// have to recalculate homography after shift
 	estimateHomography();
 }
-
-float Marker::avgMarkerDistRatio (Marker marker2) {
-	float sum = 0;
-	float markerLen = sqrt(squaredDistance(corners[0],corners[1]));
-
-	for (int c=0; c < corners.size();c++)
-		sum += sqrt(squaredDistance(corners[c],marker2.corners[c]));
-
-	float mean = sum/8; // 2x4 corners
-	
-	// average distance between markers as ratio of current marker
-	return mean/markerLen;
-}

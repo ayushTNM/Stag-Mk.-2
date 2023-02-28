@@ -1,5 +1,5 @@
-#ifndef STAG_H
-#define STAG_H
+#ifndef STAG2_H
+#define STAG2_H
 
 #include "EDInterface.h"
 #include "QuadDetector.h"
@@ -9,7 +9,7 @@
 #include "PoseRefiner.h"
 #include "utility.h"
 
-class Stag
+class Stag2
 {
 	// if keepLogs is true, keep the intermediate results of the detection algorithm in the memory, to be dumped when asked (default: false)
 	bool keepLogs = false;
@@ -35,9 +35,7 @@ class Stag
 	void fillCodeLocations();
 	cv::Mat createMatFromPolarCoords(double radius, double radians, double circleRadius);
 public:
-	Stag(int libraryHD = 15, int errorCorrection = 7, bool inKeepLogs = false);
-	void averageGroupedMarkers();
-	std::vector<cv::Point2d> calcAvgCorners(vector<Marker> markers);
+	Stag2(int libraryHD = 15, int errorCorrection = 7, bool inKeepLogs = false);
 	void detectMarkers(cv::Mat inImage);
 
 	// show is string and shows all specified results, this can be:
