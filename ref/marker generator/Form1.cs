@@ -176,19 +176,21 @@ namespace EDMarker_Generator
                 // turn off antialiasing to apply morphological operations
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
 
-                // apply black code circles
-                for (int j = 0; j < noOfBits; j++)
-                    if (codes[i][j] == 1)
-                        g.FillEllipse(Brushes.White, innerCircleTopLeft + innerCircleDiameterSize * (float)codeLocs[j].x - codeCircleDiameterSize / 2, innerCircleTopLeft + innerCircleDiameterSize * (float)codeLocs[j].y - codeCircleDiameterSize / 2, codeCircleDiameterSize, codeCircleDiameterSize);
-                // apply filler circles
-                for (int j = 0; j < noOfBits; j++)
-                    for (int k = j + 1; k < noOfBits; k++)
-                        if ((codes[i][j] == 1) && (codes[i][k] == 1))
-                            if (nearbyCodes[j].Contains(k))
-                                g.FillEllipse(Brushes.White, innerCircleTopLeft + innerCircleDiameterSize * (float)((codeLocs[j].x + codeLocs[k].x) / 2) - fillerCircleDiameterSize / 2, innerCircleTopLeft + innerCircleDiameterSize * (float)((codeLocs[j].y + codeLocs[k].y) / 2) - fillerCircleDiameterSize / 2, fillerCircleDiameterSize, fillerCircleDiameterSize);
                 // apply white code circles
                 for (int j = 0; j < noOfBits; j++)
                     if (codes[i][j] == 0)
+                        g.FillEllipse(Brushes.White, innerCircleTopLeft + innerCircleDiameterSize * (float)codeLocs[j].x - codeCircleDiameterSize / 2, innerCircleTopLeft + innerCircleDiameterSize * (float)codeLocs[j].y - codeCircleDiameterSize / 2, codeCircleDiameterSize, codeCircleDiameterSize);
+                
+                // apply filler circles
+                for (int j = 0; j < noOfBits; j++)
+                    for (int k = j + 1; k < noOfBits; k++)
+                        if ((codes[i][j] == 0) && (codes[i][k] == 0))
+                            if (nearbyCodes[j].Contains(k))
+                                g.FillEllipse(Brushes.White, innerCircleTopLeft + innerCircleDiameterSize * (float)((codeLocs[j].x + codeLocs[k].x) / 2) - fillerCircleDiameterSize / 2, innerCircleTopLeft + innerCircleDiameterSize * (float)((codeLocs[j].y + codeLocs[k].y) / 2) - fillerCircleDiameterSize / 2, fillerCircleDiameterSize, fillerCircleDiameterSize);
+                
+                // apply black code circles
+                for (int j = 0; j < noOfBits; j++)
+                    if (codes[i][j] == 1)
                         g.FillEllipse(Brushes.Black, innerCircleTopLeft + innerCircleDiameterSize * (float)codeLocs[j].x - codeCircleDiameterSize / 2, innerCircleTopLeft + innerCircleDiameterSize * (float)codeLocs[j].y - codeCircleDiameterSize / 2, codeCircleDiameterSize, codeCircleDiameterSize);
    
                 //erode, dilate
@@ -196,20 +198,22 @@ namespace EDMarker_Generator
                 System.Diagnostics.Debug.WriteLine($"{dirName}, {i} busy.");
                 for (int j = 0; j < 5; j++)
                 {
+                    //invert(ref img);
                     dilateBitmap(ref img, 5, rad);
                     erodeBitmap(ref img, 5, rad);
+                    //invert(ref img);
                 }
                 
                 // smooth and recode
                 smoothBitmap(ref img);
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                // apply black code circles
-                for (int j = 0; j < noOfBits; j++)
-                    if (codes[i][j] == 1)
-                        g.FillEllipse(Brushes.White, innerCircleTopLeft + innerCircleDiameterSize * (float)codeLocs[j].x - codeCircleDiameterSize / 2, innerCircleTopLeft + innerCircleDiameterSize * (float)codeLocs[j].y - codeCircleDiameterSize / 2, codeCircleDiameterSize, codeCircleDiameterSize);
                 // apply white code circles
                 for (int j = 0; j < noOfBits; j++)
                     if (codes[i][j] == 0)
+                        g.FillEllipse(Brushes.White, innerCircleTopLeft + innerCircleDiameterSize * (float)codeLocs[j].x - codeCircleDiameterSize / 2, innerCircleTopLeft + innerCircleDiameterSize * (float)codeLocs[j].y - codeCircleDiameterSize / 2, codeCircleDiameterSize, codeCircleDiameterSize);
+                // apply black code circles
+                for (int j = 0; j < noOfBits; j++)
+                    if (codes[i][j] == 1)
                         g.FillEllipse(Brushes.Black, innerCircleTopLeft + innerCircleDiameterSize * (float)codeLocs[j].x - codeCircleDiameterSize / 2, innerCircleTopLeft + innerCircleDiameterSize * (float)codeLocs[j].y - codeCircleDiameterSize / 2, codeCircleDiameterSize, codeCircleDiameterSize);
 
                 // clear the space between the inner and outer circle
@@ -280,6 +284,19 @@ namespace EDMarker_Generator
         public doublePoint polarToCart(double radius, double radians)
         {
             return new doublePoint(0.5 + Math.Cos(radians) * radius, 0.5 - Math.Sin(radians) * radius);
+        }
+
+        public void invert(ref Bitmap b)
+        {
+            for (int y = 0; (y <= (b.Height - 1)); y++)
+            {
+                for (int x = 0; (x <= (b.Width - 1)); x++)
+                {
+                    Color inv = b.GetPixel(x, y);
+                    inv = Color.FromArgb(255, (255 - inv.R), (255 - inv.G), (255 - inv.B));
+                    b.SetPixel(x, y, inv);
+                }
+            }
         }
 
         public void erodeBitmap(ref Bitmap b, int thres, int radius)
