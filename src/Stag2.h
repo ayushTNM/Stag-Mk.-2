@@ -23,7 +23,6 @@ class Stag2
 	vector<cv::Mat> codeLocs;
 	vector<cv::Mat> innerLocs;
 	vector<cv::Mat> outerLocs;
-	vector<cv::Mat> RhombusLocs;
 
 	cv::Mat image;
 	vector<Marker> markers;

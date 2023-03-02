@@ -19,10 +19,6 @@ Stag2::Stag2(int libraryHD, int inErrorCorrection, bool inKeepLogs)
 
 void Stag2::detectMarkers(Mat inImage)
 {
-	// clear vectors
-	groupedMarkers.clear();
-	falseCandidates.clear();
-
 	// convert image to gray if not already
 	if (inImage.channels() == 1)
 		image = inImage;
@@ -150,7 +146,6 @@ void Stag2::fillCodeLocations()
 {
 	innerLocs = vector<cv::Mat>(12);
 	outerLocs = vector<cv::Mat>(12);
-	// RhombusLocs = vector<cv::Mat>(12);
 	codeLocs = vector<Mat>(48);
 
 	// each quadrant is rotated by HALF_PI

@@ -14,10 +14,6 @@ QuadDetector::QuadDetector(bool inKeepLogs)
 
 void QuadDetector::detectQuads(const cv::Mat &image, EDInterface *edInterface)
 {
-	cornerGroups.clear();
-	distortedQuads.clear();
-	quads.clear();
-
 	edInterface->runEDPFandEDLines(image);
 
 	EDLines *edLines = edInterface->getEDLines();

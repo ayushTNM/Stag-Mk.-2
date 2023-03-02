@@ -57,7 +57,7 @@ void Quad::fix_white(Mat image, vector<Mat> innerLocs, vector<Mat> outerLocs)
 
 	// check color points inside quad and outside and decide if white or black based on half of the checked points
 	if (whiteLocs >= 12) {
-		double offset = 1 - (markerStats::borderRatio + markerStats::diamondRatio);
+		double offset = 1 - (markerStats::borderRatio + markerStats::rhombusRatio);
 
 		// rotate and expand square
 		Mat projectedPoint = H * (cv::Mat_<double>(3,1) << -(0.5 + 0.05 + offset), 0.5,1);
@@ -209,7 +209,6 @@ Quad::Quad(const Quad &q)
 {
 	corners = q.corners;
 	lineInf = q.lineInf;
-	black_square = q.black_square;
 	projectiveDistortion = q.projectiveDistortion;
 	H = q.H.clone();
 	center = q.center;

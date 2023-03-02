@@ -13,7 +13,6 @@ public:
 	vector<cv::Point2d> corners;
 	cv::Point3d lineInf;
 	double projectiveDistortion = 0;
-	bool black_square;
 	cv::Mat H;
 	cv::Point2d center;
 
