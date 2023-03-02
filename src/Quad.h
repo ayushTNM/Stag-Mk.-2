@@ -19,8 +19,7 @@ public:
 
 	void calculateLineAtInfinity();
 	void calculateProjectiveDistortion();
-	void check_color(cv::Mat image, vector<cv::Mat> innerLocs);
-	void fix_white();
+	void fix_white(cv::Mat image, vector<cv::Mat> innerLocs, vector<cv::Mat> outerLocs);
 
 	Quad(){}
 	Quad(vector<cv::Point2d> inCorners);

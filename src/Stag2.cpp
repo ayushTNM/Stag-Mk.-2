@@ -37,11 +37,8 @@ void Stag2::detectMarkers(Mat inImage)
 	{
 		quads[indQuad].estimateHomography();
 
-		// Check if black or white square
-		quads[indQuad].check_color(image, blackLocs);
-
 		// Scale out corners of white square to include black square
-		quads[indQuad].fix_white();
+		quads[indQuad].fix_white(image, innerLocs, outerLocs);
 
 		Codeword c = readCode(quads[indQuad]);
 		int shift;
@@ -54,6 +51,7 @@ void Stag2::detectMarkers(Mat inImage)
 
 			// refine pose of marker
 			poseRefiner.refineMarkerPose(&edInterface, marker);
+
 			markers.push_back(marker);
 		}
 
@@ -111,7 +109,6 @@ void Stag2::logResults(Mat image, string show, bool save, string path)
 	}
 }
 
-vector<double> test1;
 Codeword Stag2::readCode(const Quad &q)
 {
 	// take readings from 48 code locations, 12 black border locations, and 12 white border locations
@@ -126,19 +123,20 @@ Codeword Stag2::readCode(const Quad &q)
 	}
 	for (int i = 0; i < 12; i++)
 	{
-		Mat projectedPoint = q.H * whiteLocs[i];
+		Mat projectedPoint = q.H * innerLocs[i];
 
 		samples[i + 48] = readPixelSafeBilinear(image, Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2)));
 	}
+
 	for (int i = 0; i < 12; i++)
 	{
-		Mat projectedPoint = q.H * blackLocs[i];
+		Mat projectedPoint = q.H * outerLocs[i];
 
 		samples[i + 60] = readPixelSafeBilinear(image, Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2)));
 	}
 
 	// threshold the readings using Otsu's method
-	cv::threshold(samples, samples, 0, 255, cv::THRESH_OTSU + cv::THRESH_BINARY);
+	cv::threshold(samples, samples, 0, 255, cv::THRESH_OTSU + cv::THRESH_BINARY_INV);
 
 	// create a codeword using the thresholded readings
 	Codeword c;
@@ -150,10 +148,11 @@ Codeword Stag2::readCode(const Quad &q)
 
 void Stag2::fillCodeLocations()
 {
-	blackLocs = vector<Mat>(12);
-	whiteLocs = vector<Mat>(12);
+	innerLocs = vector<cv::Mat>(12);
+	outerLocs = vector<cv::Mat>(12);
+	// RhombusLocs = vector<cv::Mat>(12);
 	codeLocs = vector<Mat>(48);
-	
+
 	// each quadrant is rotated by HALF_PI
 	// these part is left as is for self-documenting purposes
 	for (int i = 0; i < 4; i++)
@@ -172,113 +171,35 @@ void Stag2::fillCodeLocations()
 		codeLocs[11 + i * 12] = createMatFromPolarCoords(0.437421957035861, HALF_PI - 0.145724938287167 + i * HALF_PI, markerStats::innerCircleRadius);
 	}
 
-	for (int i = 0; i < 12; i++)
-	{
-		blackLocs[i] = Mat(3, 1, CV_64FC1);
-		whiteLocs[i] = Mat(3, 1, CV_64FC1);
-	}
-
-	blackLocs[0].at<double>(0) = markerStats::borderRatio;
-	blackLocs[0].at<double>(1) = markerStats::borderRatio * 3;
-	blackLocs[0].at<double>(2) = 1;
-
-	blackLocs[1].at<double>(0) = markerStats::borderRatio;
-	blackLocs[1].at<double>(1) = markerStats::borderRatio;
-	blackLocs[1].at<double>(2) = 1;
-
-	blackLocs[2].at<double>(0) = markerStats::borderRatio * 3;
-	blackLocs[2].at<double>(1) = markerStats::borderRatio;
-	blackLocs[2].at<double>(2) = 1;
-
-	blackLocs[3].at<double>(0) = 1 - 3 * markerStats::borderRatio;
-	blackLocs[3].at<double>(1) = markerStats::borderRatio;
-	blackLocs[3].at<double>(2) = 1;
-
-	blackLocs[4].at<double>(0) = 1 - markerStats::borderRatio;
-	blackLocs[4].at<double>(1) = markerStats::borderRatio;
-	blackLocs[4].at<double>(2) = 1;
-
-	blackLocs[5].at<double>(0) = 1 - markerStats::borderRatio;
-	blackLocs[5].at<double>(1) = markerStats::borderRatio * 3;
-	blackLocs[5].at<double>(2) = 1;
-
-	blackLocs[6].at<double>(0) = 1 - markerStats::borderRatio;
-	blackLocs[6].at<double>(1) = 1 - 3 * markerStats::borderRatio;
-	blackLocs[6].at<double>(2) = 1;
-
-	blackLocs[7].at<double>(0) = 1 - markerStats::borderRatio;
-	blackLocs[7].at<double>(1) = 1 - markerStats::borderRatio;
-	blackLocs[7].at<double>(2) = 1;
-
-	blackLocs[8].at<double>(0) = 1 - 3 * markerStats::borderRatio;
-	blackLocs[8].at<double>(1) = 1 - markerStats::borderRatio;
-	blackLocs[8].at<double>(2) = 1;
-
-	blackLocs[9].at<double>(0) = markerStats::borderRatio * 3;
-	blackLocs[9].at<double>(1) = 1 - markerStats::borderRatio;
-	blackLocs[9].at<double>(2) = 1;
-
-	blackLocs[10].at<double>(0) = markerStats::borderRatio;
-	blackLocs[10].at<double>(1) = 1 - markerStats::borderRatio;
-	blackLocs[10].at<double>(2) = 1;
-
-	blackLocs[11].at<double>(0) = markerStats::borderRatio;
-	blackLocs[11].at<double>(1) = 1 - 3 * markerStats::borderRatio;
-	blackLocs[11].at<double>(2) = 1;
-
-	whiteLocs[0].at<double>(0) = 0.25;
-	whiteLocs[0].at<double>(1) = -markerStats::borderRatio;
-	whiteLocs[0].at<double>(2) = 1;
-
-	whiteLocs[1].at<double>(0) = 0.5;
-	whiteLocs[1].at<double>(1) = -markerStats::borderRatio;
-	whiteLocs[1].at<double>(2) = 1;
-
-	whiteLocs[2].at<double>(0) = 0.75;
-	whiteLocs[2].at<double>(1) = -markerStats::borderRatio;
-	whiteLocs[2].at<double>(2) = 1;
-
-	whiteLocs[3].at<double>(0) = 1 + markerStats::borderRatio;
-	whiteLocs[3].at<double>(1) = 0.25;
-	whiteLocs[3].at<double>(2) = 1;
-
-	whiteLocs[4].at<double>(0) = 1 + markerStats::borderRatio;
-	whiteLocs[4].at<double>(1) = 0.5;
-	whiteLocs[4].at<double>(2) = 1;
-
-	whiteLocs[5].at<double>(0) = 1 + markerStats::borderRatio;
-	whiteLocs[5].at<double>(1) = 0.75;
-	whiteLocs[5].at<double>(2) = 1;
-
-	whiteLocs[6].at<double>(0) = 0.75;
-	whiteLocs[6].at<double>(1) = 1 + markerStats::borderRatio;
-	whiteLocs[6].at<double>(2) = 1;
-
-	whiteLocs[7].at<double>(0) = 0.5;
-	whiteLocs[7].at<double>(1) = 1 + markerStats::borderRatio;
-	whiteLocs[7].at<double>(2) = 1;
-
-	whiteLocs[8].at<double>(0) = 0.25;
-	whiteLocs[8].at<double>(1) = 1 + markerStats::borderRatio;
-	whiteLocs[8].at<double>(2) = 1;
-
-	whiteLocs[9].at<double>(0) = -markerStats::borderRatio;
-	whiteLocs[9].at<double>(1) = 0.75;
-	whiteLocs[9].at<double>(2) = 1;
-
-	whiteLocs[10].at<double>(0) = -markerStats::borderRatio;
-	whiteLocs[10].at<double>(1) = 0.5;
-	whiteLocs[10].at<double>(2) = 1;
-
-	whiteLocs[11].at<double>(0) = -markerStats::borderRatio;
-	whiteLocs[11].at<double>(1) = 0.25;
-	whiteLocs[11].at<double>(2) = 1;
+	innerLocs[0] = (cv::Mat_<double>(3, 1) << markerStats::borderRatio, markerStats::borderRatio * 3, 1);
+	innerLocs[1] = (cv::Mat_<double>(3, 1) << markerStats::borderRatio, markerStats::borderRatio, 1);
+	innerLocs[2] = (cv::Mat_<double>(3, 1) << markerStats::borderRatio * 3, markerStats::borderRatio, 1);
+	innerLocs[3] = (cv::Mat_<double>(3, 1) << 1 - 3 * markerStats::borderRatio, markerStats::borderRatio, 1);
+	innerLocs[4] = (cv::Mat_<double>(3, 1) << 1 - markerStats::borderRatio, markerStats::borderRatio, 1);
+	innerLocs[5] = (cv::Mat_<double>(3, 1) << 1 - markerStats::borderRatio, markerStats::borderRatio * 3, 1);
+	innerLocs[6] = (cv::Mat_<double>(3, 1) << 1 - markerStats::borderRatio, 1 - 3 * markerStats::borderRatio, 1);
+	innerLocs[7] = (cv::Mat_<double>(3, 1) << 1 - markerStats::borderRatio, 1 - markerStats::borderRatio, 1);
+	innerLocs[8] = (cv::Mat_<double>(3, 1) << 1 - 3 * markerStats::borderRatio, 1 - markerStats::borderRatio, 1);
+	innerLocs[9] = (cv::Mat_<double>(3, 1) << markerStats::borderRatio * 3, 1 - markerStats::borderRatio, 1);
+	innerLocs[10] = (cv::Mat_<double>(3, 1) << markerStats::borderRatio, 1 - markerStats::borderRatio, 1);
+	innerLocs[11] = (cv::Mat_<double>(3, 1) << markerStats::borderRatio, 1 - 3 * markerStats::borderRatio, 1);
+	outerLocs[0] = (cv::Mat_<double>(3, 1) << 0.25, -markerStats::borderRatio, 1);
+	outerLocs[1] = (cv::Mat_<double>(3, 1) << 0.5, -markerStats::borderRatio, 1);
+	outerLocs[2] = (cv::Mat_<double>(3, 1) << 0.75, -markerStats::borderRatio, 1);
+	outerLocs[3] = (cv::Mat_<double>(3, 1) << 1 + markerStats::borderRatio, 0.25, 1);
+	outerLocs[4] = (cv::Mat_<double>(3, 1) << 1 + markerStats::borderRatio, 0.5, 1);
+	outerLocs[5] = (cv::Mat_<double>(3, 1) << 1 + markerStats::borderRatio, 0.75, 1);
+	outerLocs[6] = (cv::Mat_<double>(3, 1) << 0.75, 1 + markerStats::borderRatio, 1);
+	outerLocs[7] = (cv::Mat_<double>(3, 1) << 0.5, 1 + markerStats::borderRatio, 1);
+	outerLocs[8] = (cv::Mat_<double>(3, 1) << 0.25, 1 + markerStats::borderRatio, 1);
+	outerLocs[9] = (cv::Mat_<double>(3, 1) << -markerStats::borderRatio, 0.75, 1);
+	outerLocs[10] = (cv::Mat_<double>(3, 1) << -markerStats::borderRatio, 0.5, 1);
+	outerLocs[11] = (cv::Mat_<double>(3, 1) << -markerStats::borderRatio, 0.25, 1);
 }
 
 Mat Stag2::createMatFromPolarCoords(double radius, double radians, double circleRadius)
 {
 	Mat point(3, 1, CV_64FC1);
-	test1.push_back(radius);
 	point.at<double>(0) = 0.5 + cos(radians) * radius * (circleRadius / 0.5);
 	point.at<double>(1) = 0.5 - sin(radians) * radius * (circleRadius / 0.5);
 	point.at<double>(2) = 1;

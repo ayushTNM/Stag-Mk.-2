@@ -21,8 +21,9 @@ class Stag2
 	PoseRefiner poseRefiner;
 
 	vector<cv::Mat> codeLocs;
-	vector<cv::Mat> blackLocs;
-	vector<cv::Mat> whiteLocs;
+	vector<cv::Mat> innerLocs;
+	vector<cv::Mat> outerLocs;
+	vector<cv::Mat> RhombusLocs;
 
 	cv::Mat image;
 	vector<Marker> markers;

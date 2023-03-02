@@ -13,7 +13,7 @@ Quad::Quad(vector<Point2d> inCorners)
 	calculateProjectiveDistortion();
 }
 
-void Quad::check_color(Mat image, vector<Mat> innerLocs)
+void Quad::fix_white(Mat image, vector<Mat> innerLocs, vector<Mat> outerLocs)
 {
 	// corner vector to corner array
 	cv::Point2f orig_corners[4];
@@ -29,66 +29,47 @@ void Quad::check_color(Mat image, vector<Mat> innerLocs)
 	Mat warpPerspectiveMatrix = cv::getPerspectiveTransform(orig_corners, warped_corners);
 	cv::warpPerspective(image, warped, warpPerspectiveMatrix, warped.size());
 
-	// threshold using otsu and binary
+	// threshold using otsu
 	cv::threshold(warped, warped, 0, 255, cv::THRESH_OTSU + cv::THRESH_BINARY);
 
-	float blackLocs = 0;
-	vector<cv::Mat> neededLocs = vector<cv::Mat>(12);
+	float whiteLocs = 0;
+	vector<cv::Point2d> neededLocs = vector<cv::Point2d>(12);
 	for (int i = 1; i < innerLocs.size(); i += 3)
-		neededLocs[i / 3] = innerLocs[i];
+		neededLocs[i / 3] = cv::Point2d(innerLocs[i].at<double>(0)/innerLocs[i].at<double>(2),innerLocs[i].at<double>(1)/innerLocs[i].at<double>(2));
 
 	float borderDist = innerLocs[0].at<double>(0) / 2;
-	neededLocs[4] = (cv::Mat_<double>(1, 3) << 0.3, borderDist, 1);
-	neededLocs[5] = (cv::Mat_<double>(1, 3) << borderDist, 0.3, 1);
-	neededLocs[6] = (cv::Mat_<double>(1, 3) << 0.3, 1 - borderDist, 1);
-	neededLocs[7] = (cv::Mat_<double>(1, 3) << 1 - borderDist, 0.3, 1);
-	neededLocs[8] = (cv::Mat_<double>(1, 3) << 0.7, borderDist, 1);
-	neededLocs[9] = (cv::Mat_<double>(1, 3) << borderDist, 0.7, 1);
-	neededLocs[10] = (cv::Mat_<double>(1, 3) << 0.7, 1 - borderDist, 1);
-	neededLocs[11] = (cv::Mat_<double>(1, 3) << 1 - borderDist, 0.7, 1);
+	neededLocs[4] = cv::Point2d(0.3, borderDist);
+	neededLocs[5] = cv::Point2d(borderDist, 0.3);
+	neededLocs[6] = cv::Point2d(0.3, 1 - borderDist);
+	neededLocs[7] = cv::Point2d(1 - borderDist, 0.3);
+	neededLocs[8] = cv::Point2d(0.7, borderDist);
+	neededLocs[9] = cv::Point2d(borderDist, 0.7);
+	neededLocs[10] = cv::Point2d(0.7, 1 - borderDist);
+	neededLocs[11] = cv::Point2d(1 - borderDist, 0.7);
 
-	for (int i = 0; i < innerLocs.size(); i++)
-		if ((int)warped.at<uchar>(cv::Point2d(innerLocs[i].at<double>(0) * 200, innerLocs[i].at<double>(1) * 200)) == 0)
-			blackLocs++;
-
-	// check 4 points on every edge of square and decide if black or white based on half of the points
-	if (blackLocs >= (neededLocs.size() / 2))
-		black_square = true;
-	else
-		black_square = false;
-}
-
-void Quad::fix_white()
-{
-	if (black_square == false)
+	for (int i = 0; i < 12; i++) 
 	{
+		if ((int)warped.at<uchar>(neededLocs[i] * 200) == 255)
+			whiteLocs++;
+		if ((int)warped.at<uchar>(cv::Point2d(outerLocs[i].at<double>(0)/outerLocs[i].at<double>(2),outerLocs[i].at<double>(1)/outerLocs[i].at<double>(2)) * 200) == 0)
+			whiteLocs++;
+	}
+
+	// check color points inside quad and outside and decide if white or black based on half of the checked points
+	if (whiteLocs >= 12) {
 		double offset = 1 - (markerStats::borderRatio + markerStats::diamondRatio);
 
-		// corner matrix
-		Mat matcorn(3, 1, CV_64F);
-
-		matcorn.at<double>(0) = -(0.5 + 0.05 + offset);
-		matcorn.at<double>(1) = 0.5;
-		matcorn.at<double>(2) = 1;
-		Mat projectedPoint = H * matcorn;
+		// rotate and expand square
+		Mat projectedPoint = H * (cv::Mat_<double>(3,1) << -(0.5 + 0.05 + offset), 0.5,1);
 		corners[0] = Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2));
 
-		matcorn.at<double>(0) = 0.5;
-		matcorn.at<double>(1) = -(0.5 + 0.05 + offset);
-		matcorn.at<double>(2) = 1;
-		projectedPoint = H * matcorn;
+		projectedPoint = H * (cv::Mat_<double>(3,1) << 0.5, -(0.5 + 0.05 + offset),1);
 		corners[1] = Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2));
 
-		matcorn.at<double>(0) = 0.5;
-		matcorn.at<double>(1) = 1.5 + 0.05 + offset;
-		matcorn.at<double>(2) = 1;
-		projectedPoint = H * matcorn;
+		projectedPoint = H * (cv::Mat_<double>(3,1) << 0.5, 1.5 + 0.05 + offset,1);
 		corners[3] = Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2));
 
-		matcorn.at<double>(0) = 1.5 + 0.05 + offset;
-		matcorn.at<double>(1) = 0.5;
-		matcorn.at<double>(2) = 1;
-		projectedPoint = H * matcorn;
+		projectedPoint = H * (cv::Mat_<double>(3,1) << 1.5 + 0.05 + offset, 0.5,1);
 		corners[2] = Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2));
 
 		// recalculate stats
