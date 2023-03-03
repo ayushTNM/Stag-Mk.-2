@@ -34,7 +34,7 @@ void Stag2::detectMarkers(Mat inImage)
 		quads[indQuad].estimateHomography();
 
 		// Scale out corners of white square to include black square
-		quads[indQuad].fix_white(image, innerLocs, outerLocs);
+		quads[indQuad].rhombusCorrection(image, innerLocs, outerLocs);
 
 		Codeword c = readCode(quads[indQuad]);
 		int shift;

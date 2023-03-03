@@ -13,10 +13,12 @@ Quad::Quad(vector<Point2d> inCorners)
 	calculateProjectiveDistortion();
 }
 
-void Quad::fix_white(Mat image, vector<Mat> innerLocs, vector<Mat> outerLocs)
+void Quad::rhombusCorrection(Mat image, vector<Mat> innerLocs, vector<Mat> outerLocs)
 {
-	// threshold using otsu
+	// Rhombus detection
+
 	cv::Mat thresh;
+	// threshold using otsu
 	cv::threshold(image, thresh, 0, 255, cv::THRESH_OTSU + cv::THRESH_BINARY);
 
 	float whiteLocs = 0;
@@ -46,6 +48,8 @@ void Quad::fix_white(Mat image, vector<Mat> innerLocs, vector<Mat> outerLocs)
 			whiteLocs++;
 		}
 	}
+
+	// Quad correction
 
 	// check color points inside quad and outside and decide if white or black based on half of the checked points
 	if (whiteLocs >= 12) {
