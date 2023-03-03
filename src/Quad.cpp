@@ -64,9 +64,7 @@ void Quad::fix_white(Mat image, vector<Mat> innerLocs, vector<Mat> outerLocs)
 		projectedPoint = H * (cv::Mat_<double>(3,1) << 1.5 + 0.05 + offset, 0.5,1);
 		corners[2] = Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2));
 
-		// recalculate stats
-		calculateLineAtInfinity();
-		calculateProjectiveDistortion();
+		// reestimate homography
 		estimateHomography();
 	}
 }
