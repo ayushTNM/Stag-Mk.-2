@@ -15,44 +15,36 @@ Quad::Quad(vector<Point2d> inCorners)
 
 void Quad::fix_white(Mat image, vector<Mat> innerLocs, vector<Mat> outerLocs)
 {
-	// corner vector to corner array
-	cv::Point2f orig_corners[4];
-	std::copy(corners.begin(), corners.end(), orig_corners);
-
-	// back project to check color
-	cv::Point2f warped_corners[4];
-	cv::Mat warped(200, 200, image.type());
-	warped_corners[0] = cv::Point2f(0, 0);
-	warped_corners[1] = cv::Point2f(warped.cols, 0);
-	warped_corners[2] = cv::Point2f(warped.cols, warped.rows);
-	warped_corners[3] = cv::Point2f(0, warped.rows);
-	Mat warpPerspectiveMatrix = cv::getPerspectiveTransform(orig_corners, warped_corners);
-	cv::warpPerspective(image, warped, warpPerspectiveMatrix, warped.size());
-
 	// threshold using otsu
-	cv::threshold(warped, warped, 0, 255, cv::THRESH_OTSU + cv::THRESH_BINARY);
+	cv::Mat thresh;
+	cv::threshold(image, thresh, 0, 255, cv::THRESH_OTSU + cv::THRESH_BINARY);
 
 	float whiteLocs = 0;
-	vector<cv::Point2d> neededLocs = vector<cv::Point2d>(12);
+	vector<cv::Mat> neededLocs = vector<cv::Mat>(12);
 	for (int i = 1; i < innerLocs.size(); i += 3)
-		neededLocs[i / 3] = cv::Point2d(innerLocs[i].at<double>(0)/innerLocs[i].at<double>(2),innerLocs[i].at<double>(1)/innerLocs[i].at<double>(2));
+		neededLocs[i / 3] = innerLocs[i];
 
 	float borderDist = innerLocs[0].at<double>(0) / 2;
-	neededLocs[4] = cv::Point2d(0.3, borderDist);
-	neededLocs[5] = cv::Point2d(borderDist, 0.3);
-	neededLocs[6] = cv::Point2d(0.3, 1 - borderDist);
-	neededLocs[7] = cv::Point2d(1 - borderDist, 0.3);
-	neededLocs[8] = cv::Point2d(0.7, borderDist);
-	neededLocs[9] = cv::Point2d(borderDist, 0.7);
-	neededLocs[10] = cv::Point2d(0.7, 1 - borderDist);
-	neededLocs[11] = cv::Point2d(1 - borderDist, 0.7);
+	neededLocs[4] = (cv::Mat_<double>(3,1) << 0.3, borderDist,1);
+	neededLocs[5] = (cv::Mat_<double>(3,1) << borderDist, 0.3,1);
+	neededLocs[6] = (cv::Mat_<double>(3,1) << 0.3, 1 - borderDist,1);
+	neededLocs[7] = (cv::Mat_<double>(3,1) << 1 - borderDist, 0.3,1);
+	neededLocs[8] = (cv::Mat_<double>(3,1) << 0.7, borderDist,1);
+	neededLocs[9] = (cv::Mat_<double>(3,1) << borderDist, 0.7,1);
+	neededLocs[10] = (cv::Mat_<double>(3,1) << 0.7, 1 - borderDist,1);
+	neededLocs[11] = (cv::Mat_<double>(3,1) <<  - borderDist, 0.7,1);
 
+	Mat projectedPoint;
 	for (int i = 0; i < 12; i++) 
 	{
-		if ((int)warped.at<uchar>(neededLocs[i] * 200) == 255)
+		projectedPoint = H * neededLocs[i];
+		if ((int)thresh.at<uchar>(Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2))) == 255)
 			whiteLocs++;
-		if ((int)warped.at<uchar>(cv::Point2d(outerLocs[i].at<double>(0)/outerLocs[i].at<double>(2),outerLocs[i].at<double>(1)/outerLocs[i].at<double>(2)) * 200) == 0)
+
+		projectedPoint = H * outerLocs[i];
+		if ((int)thresh.at<uchar>(Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2))) == 0) {
 			whiteLocs++;
+		}
 	}
 
 	// check color points inside quad and outside and decide if white or black based on half of the checked points
@@ -60,7 +52,7 @@ void Quad::fix_white(Mat image, vector<Mat> innerLocs, vector<Mat> outerLocs)
 		double offset = 1 - (markerStats::borderRatio + markerStats::rhombusRatio);
 
 		// rotate and expand square
-		Mat projectedPoint = H * (cv::Mat_<double>(3,1) << -(0.5 + 0.05 + offset), 0.5,1);
+		projectedPoint = H * (cv::Mat_<double>(3,1) << -(0.5 + 0.05 + offset), 0.5,1);
 		corners[0] = Point2d(projectedPoint.at<double>(0) / projectedPoint.at<double>(2), projectedPoint.at<double>(1) / projectedPoint.at<double>(2));
 
 		projectedPoint = H * (cv::Mat_<double>(3,1) << 0.5, -(0.5 + 0.05 + offset),1);
