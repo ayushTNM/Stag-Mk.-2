@@ -13,7 +13,7 @@ Quad::Quad(vector<Point2d> inCorners)
 	calculateProjectiveDistortion();
 }
 
-void Quad::rhombusCorrection(Mat image, vector<Mat> innerLocs, vector<Mat> outerLocs)
+bool Quad::rhombusCorrection(Mat image, vector<Mat> innerLocs, vector<Mat> outerLocs)
 {
 	// Rhombus detection
 
@@ -70,7 +70,9 @@ void Quad::rhombusCorrection(Mat image, vector<Mat> innerLocs, vector<Mat> outer
 
 		// reestimate homography
 		estimateHomography();
+		return true;
 	}
+	return false;
 }
 
 void Quad::estimateHomography()

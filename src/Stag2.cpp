@@ -27,6 +27,7 @@ void Stag2::detectMarkers(Mat inImage)
 
 	quadDetector.detectQuads(image, &edInterface);
 	vector<Quad> quads = quadDetector.getQuads();
+	bool whiteQuad;
 
 	// groupedMarkers.push_back(vector<Marker>());
 	for (int indQuad = 0; indQuad < quads.size(); indQuad++)
@@ -34,7 +35,7 @@ void Stag2::detectMarkers(Mat inImage)
 		quads[indQuad].estimateHomography();
 
 		// Scale out corners of white square to include black square
-		quads[indQuad].rhombusCorrection(image, innerLocs, outerLocs);
+		whiteQuad = quads[indQuad].rhombusCorrection(image, innerLocs, outerLocs);
 
 		Codeword c = readCode(quads[indQuad]);
 		int shift;
@@ -47,8 +48,9 @@ void Stag2::detectMarkers(Mat inImage)
 
 			// refine pose of marker
 			poseRefiner.refineMarkerPose(&edInterface, marker);
-
-			markers.push_back(marker);
+			if (whiteQuad == false)
+				markers.push_back(marker);
+			else markers.insert(markers.begin(), marker);
 		}
 
 		else if (keepLogs)
